@@ -12,19 +12,26 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build
-        run: go build ./...
+        run: go build -o /dev/null ./...
 
       - name: Test
         run: go test ./...
 
+      - name: Check gofmt changes
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Check local formatting with gofmt, the following files have formatting deviations:"
+            gofmt -s -l .
+            exit 1 
+          fi
+
       - name: Vet
         run: go vet ./...
 
-      - name: Mod download
-        run: go mod download
-
-      - name: Mod verify
-        run: go mod verify
+      - name: Verify Go modules
+        run: |
+          go mod download
+          go mod verify
 
       - name: Run govulncheck
         run: |
@@ -38,10 +45,10 @@ jobs:
 
       - name: Run staticcheck
         run: |
-          go install honnef.co/go/tools/cmd/staticcheck
+          go install honnef.co/go/tools/cmd/staticcheck@latest
           staticcheck ./...
 
       - name: Run golint
         run: |
-          go install golang.org/x/lint/golint
+          go install golang.org/x/lint/golint@latest
           golint -set_exit_status ./...
