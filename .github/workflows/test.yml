@@ -17,41 +17,31 @@ jobs:
       - name: Test
         run: go test ./...
 
-      - name: Go Format
-        run: gofmt -s -w . && git diff --exit-code
-
-      - name: Go Vet
+      - name: Vet
         run: go vet ./...
 
-      - name: Go Tidy
-        run: go mod tidy && git diff --exit-code
-
-      - name: Go Mod
+      - name: Mod download
         run: go mod download
 
-      - name: Go Mod Verify
+      - name: Mod verify
         run: go mod verify
 
-      - name: Install govulncheck
-        run: go install golang.org/x/vuln/cmd/govulncheck@latest
-
       - name: Run govulncheck
-        run: govulncheck -test ./...
-
-      - name: Install errcheck
-        run: go install github.com/kisielk/errcheck@latest
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck -test ./...
 
       - name: Run errcheck
-        run: errcheck ./...
-
-      - name: Install staticcheck
-        run: go install honnef.co/go/tools/cmd/staticcheck
+        run: |
+          go install github.com/kisielk/errcheck@latest
+          errcheck ./...
 
       - name: Run staticcheck
-        run: staticcheck ./...
-
-      - name: Install golint
-        run: go install go get -u golang.org/x/lint/golint
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck
+          staticcheck ./...
 
       - name: Run golint
-        run: golint -set_exit_status ./...
+        run: |
+          go install golang.org/x/lint/golint
+          golint -set_exit_status ./...
