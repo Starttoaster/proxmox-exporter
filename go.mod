@@ -3,6 +3,7 @@ module github.com/starttoaster/proxmox-exporter
 go 1.21
 
 require (
+	github.com/google/go-querystring v1.1.0
 	github.com/gorilla/mux v1.8.1
 	github.com/luthermonson/go-proxmox v0.0.0-beta3
 	github.com/patrickmn/go-cache v2.1.0+incompatible

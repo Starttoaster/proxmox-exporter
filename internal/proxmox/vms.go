@@ -56,3 +56,28 @@ func VirtualMachinesAllNodes() (proxmox.VirtualMachines, error) {
 
 	return vms, nil
 }
+
+// VirtualMachinesOnNode returns the virtual machines for a node
+func VirtualMachinesOnNode(node *proxmox.Node) (proxmox.VirtualMachines, error) {
+	// Chech cache
+	var vms proxmox.VirtualMachines
+	if x, found := cash.Get(fmt.Sprintf("VirtualMachinesOnNode_%s", node.Name)); found {
+		var ok bool
+		vms, ok = x.(proxmox.VirtualMachines)
+		if ok {
+			log.Logger.Debug("proxmox request was found in cache for VirtualMachinesOnNode", "node", node.Name)
+			return vms, nil
+		}
+	}
+
+	// Get VMs on the node for this iteration
+	vms, err := node.VirtualMachines(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("encountered error making request to /nodes/%s/qemu: \n%v", node.Name, err)
+	}
+
+	// Update per-node cache since we have it
+	cash.Set(fmt.Sprintf("VirtualMachinesOnNode_%s", node.Name), vms, cache.DefaultExpiration)
+
+	return vms, nil
+}
