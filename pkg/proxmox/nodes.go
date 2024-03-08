@@ -233,7 +233,7 @@ type GetNodeDisksListData struct {
 	OSDEncrypted int    `json:"osdencrypted,omitempty"`
 }
 
-// GetNodeLxc makes a GET request to the /nodes/{node}/disks/list endpoint
+// GetNodeDisksList makes a GET request to the /nodes/{node}/disks/list endpoint
 // https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/disks/list
 func (s *NodeService) GetNodeDisksList(name string) (*GetNodeLxcResponse, *http.Response, error) {
 	u := fmt.Sprintf("nodes/%s/disks/list", name)
