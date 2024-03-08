@@ -32,7 +32,7 @@ type Collector struct {
 // NewCollector constructor function for Collector
 func NewCollector() *Collector {
 	return &Collector{
-		// Up metrics
+		// Status metrics
 		nodeUp: prometheus.NewDesc(fqAddPrefix("node_up"),
 			"Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)",
 			[]string{"type", "name"},
@@ -92,14 +92,17 @@ func NewCollector() *Collector {
 
 // Describe contains all the prometheus descriptors for this metric collector
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
+	// Status metrics
 	ch <- c.nodeUp
 	ch <- c.guestUp
 
+	// CPU metrics
 	ch <- c.clusterCPUsTotal
 	ch <- c.clusterCPUsAlloc
 	ch <- c.nodeCPUsTotal
 	ch <- c.nodeCPUsAlloc
 
+	// Mem metrics
 	ch <- c.clusterMemTotal
 	ch <- c.clusterMemAlloc
 	ch <- c.nodeMemTotal
@@ -124,7 +127,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	// Retrieve node info for each node from statuses
 	for _, node := range nodes.Data {
 		// Get info for specific node
-		nodeInfo, err := wrappedProxmox.GetNode(node.Node)
+		nodeStatus, err := wrappedProxmox.GetNodeStatus(node.Node)
 		if err != nil {
 			logger.Logger.Error(err.Error())
 			return
@@ -148,15 +151,15 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 
 		// Collect metrics for this node
 		c.collectNodeUpMetric(ch, node)
-		ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeInfo.Data.CPUInfo.Cpus), node.Node)
+		ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeStatus.Data.CPUInfo.Cpus), node.Node)
 		ch <- prometheus.MustNewConstMetric(c.nodeCPUsAlloc, prometheus.GaugeValue, float64(vmMetrics.cpusAllocated+lxcMetrics.cpusAllocated), node.Node)
-		ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(nodeInfo.Data.Memory.Total), node.Node)
+		ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(nodeStatus.Data.Memory.Total), node.Node)
 		ch <- prometheus.MustNewConstMetric(c.nodeMemAlloc, prometheus.GaugeValue, float64(vmMetrics.memAllocated+lxcMetrics.memAllocated), node.Node)
 
 		// Iterate on cluster metrics
-		clusterCPUs += nodeInfo.Data.CPUInfo.Cpus
+		clusterCPUs += nodeStatus.Data.CPUInfo.Cpus
 		clusterCPUsAlloc += vmMetrics.cpusAllocated + lxcMetrics.cpusAllocated
-		clusterMem += nodeInfo.Data.Memory.Total
+		clusterMem += nodeStatus.Data.Memory.Total
 		clusterMemAlloc += vmMetrics.memAllocated + lxcMetrics.memAllocated
 	}
 
@@ -175,11 +178,14 @@ func (c *Collector) collectNodeUpMetric(ch chan<- prometheus.Metric, node proxmo
 	ch <- prometheus.MustNewConstMetric(c.nodeUp, prometheus.GaugeValue, status, node.Type, node.Node)
 }
 
+// collectVirtualMachineMetricsResponse is a struct wrapper for all VM metrics that need to be passed back for control flow,
+// usually for node-level or cluster-level metrics
 type collectVirtualMachineMetricsResponse struct {
 	cpusAllocated int
 	memAllocated  int64
 }
 
+// collectLxcMetrics adds metrics to the registry that are per-VM and returns VM aggregate data for higher level metrics
 func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, vms *proxmox.GetNodeQemuResponse) collectVirtualMachineMetricsResponse {
 	var res collectVirtualMachineMetricsResponse
 	for _, vm := range vms.Data {
@@ -197,11 +203,14 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, no
 	return res
 }
 
+// collectLxcMetricsResponse is a struct wrapper for all LXC metrics that need to be passed back for control flow,
+// usually for node-level or cluster-level metrics
 type collectLxcMetricsResponse struct {
 	cpusAllocated int
 	memAllocated  int64
 }
 
+// collectLxcMetrics adds metrics to the registry that are per-LXC and returns LXC aggregate data for higher level metrics
 func (c *Collector) collectLxcMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, lxcs *proxmox.GetNodeLxcResponse) collectLxcMetricsResponse {
 	var res collectLxcMetricsResponse
 	for _, lxc := range lxcs.Data {

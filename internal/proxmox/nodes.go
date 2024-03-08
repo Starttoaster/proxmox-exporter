@@ -39,11 +39,11 @@ func GetNodes() (*proxmox.GetNodesResponse, error) {
 	return nodes, nil
 }
 
-// GetNode returns a proxmox Node object or an error from the /nodes/%s/status endpoint
-func GetNode(name string) (*proxmox.GetNodeStatusResponse, error) {
+// GetNodStatus returns a proxmox Node object or an error from the /nodes/%s/status endpoint
+func GetNodeStatus(name string) (*proxmox.GetNodeStatusResponse, error) {
 	// Chech cache
 	var node *proxmox.GetNodeStatusResponse
-	if x, found := cash.Get(fmt.Sprintf("GetNode_%s", name)); found {
+	if x, found := cash.Get(fmt.Sprintf("GetNodeStatus_%s", name)); found {
 		var ok bool
 		node, ok = x.(*proxmox.GetNodeStatusResponse)
 		if ok {
@@ -65,7 +65,7 @@ func GetNode(name string) (*proxmox.GetNodeStatusResponse, error) {
 	}
 
 	// Update cache
-	cash.Set(fmt.Sprintf("GetNode_%s", name), node, cache.DefaultExpiration)
+	cash.Set(fmt.Sprintf("GetNodeStatus_%s", name), node, cache.DefaultExpiration)
 
 	return node, nil
 }
