@@ -83,11 +83,6 @@ Documentation and deployment details in progress.
 - Finish documentation
 
 ## Planned metrics
-Cluster memory used (gauge)
-Cluster memory total (gauge)
-
-Node mem allocated (gauge)
-Node mem total (gauge)
 
 Node certificate expiry countdown days (gauge) (labels for certificate name, and node name)
 

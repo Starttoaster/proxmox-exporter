@@ -21,11 +21,18 @@ type Collector struct {
 	clusterCPUsAlloc *prometheus.Desc
 	nodeCPUsTotal    *prometheus.Desc
 	nodeCPUsAlloc    *prometheus.Desc
+
+	// Mem
+	clusterMemTotal *prometheus.Desc
+	clusterMemAlloc *prometheus.Desc
+	nodeMemTotal    *prometheus.Desc
+	nodeMemAlloc    *prometheus.Desc
 }
 
 // NewCollector constructor function for Collector
 func NewCollector() *Collector {
 	return &Collector{
+		// Up metrics
 		nodeUp: prometheus.NewDesc(fqAddPrefix("node_up"),
 			"Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)",
 			[]string{"type", "name"},
@@ -37,6 +44,7 @@ func NewCollector() *Collector {
 			nil,
 		),
 
+		// CPU metrics
 		clusterCPUsTotal: prometheus.NewDesc(fqAddPrefix("cluster_cpus_total"),
 			"Total number of vCPU (cores/threads) for a cluster.",
 			nil,
@@ -57,6 +65,28 @@ func NewCollector() *Collector {
 			[]string{"name"},
 			nil,
 		),
+
+		// Mem metrics
+		clusterMemTotal: prometheus.NewDesc(fqAddPrefix("cluster_memory_total_bytes"),
+			"Total amount of memory in bytes for a cluster.",
+			nil,
+			nil,
+		),
+		clusterMemAlloc: prometheus.NewDesc(fqAddPrefix("cluster_memory_allocated_bytes"),
+			"Total amount of memory allocated in bytes to guests for a cluster.",
+			nil,
+			nil,
+		),
+		nodeMemTotal: prometheus.NewDesc(fqAddPrefix("node_memory_total_bytes"),
+			"Total amount of memory in bytes for a nodes.",
+			[]string{"name"},
+			nil,
+		),
+		nodeMemAlloc: prometheus.NewDesc(fqAddPrefix("node_memory_allocated_bytes"),
+			"Total amount of memory allocated in bytes to guests for a node.",
+			[]string{"name"},
+			nil,
+		),
 	}
 }
 
@@ -64,10 +94,16 @@ func NewCollector() *Collector {
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.nodeUp
 	ch <- c.guestUp
+
 	ch <- c.clusterCPUsTotal
 	ch <- c.clusterCPUsAlloc
 	ch <- c.nodeCPUsTotal
 	ch <- c.nodeCPUsAlloc
+
+	ch <- c.clusterMemTotal
+	ch <- c.clusterMemAlloc
+	ch <- c.nodeMemTotal
+	ch <- c.nodeMemAlloc
 }
 
 // Collect instructs the prometheus client how to collect the metrics for each descriptor
@@ -82,6 +118,8 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	// Cluster level metric variables (added to in each iteration of the loop below)
 	clusterCPUs := 0
 	clusterCPUsAlloc := 0
+	clusterMem := int64(0)
+	clusterMemAlloc := int64(0)
 
 	// Retrieve node info for each node from statuses
 	for _, node := range nodes.Data {
@@ -112,15 +150,21 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		c.collectNodeUpMetric(ch, node)
 		ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeInfo.Data.CPUInfo.Cpus), node.Node)
 		ch <- prometheus.MustNewConstMetric(c.nodeCPUsAlloc, prometheus.GaugeValue, float64(vmMetrics.cpusAllocated+lxcMetrics.cpusAllocated), node.Node)
+		ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(nodeInfo.Data.Memory.Total), node.Node)
+		ch <- prometheus.MustNewConstMetric(c.nodeMemAlloc, prometheus.GaugeValue, float64(vmMetrics.memAllocated+lxcMetrics.memAllocated), node.Node)
 
 		// Iterate on cluster metrics
 		clusterCPUs += nodeInfo.Data.CPUInfo.Cpus
 		clusterCPUsAlloc += vmMetrics.cpusAllocated + lxcMetrics.cpusAllocated
+		clusterMem += nodeInfo.Data.Memory.Total
+		clusterMemAlloc += vmMetrics.memAllocated + lxcMetrics.memAllocated
 	}
 
 	// Collect cluster metrics
 	ch <- prometheus.MustNewConstMetric(c.clusterCPUsTotal, prometheus.GaugeValue, float64(clusterCPUs))
 	ch <- prometheus.MustNewConstMetric(c.clusterCPUsAlloc, prometheus.GaugeValue, float64(clusterCPUsAlloc))
+	ch <- prometheus.MustNewConstMetric(c.clusterMemTotal, prometheus.GaugeValue, float64(clusterMem))
+	ch <- prometheus.MustNewConstMetric(c.clusterMemAlloc, prometheus.GaugeValue, float64(clusterMemAlloc))
 }
 
 func (c *Collector) collectNodeUpMetric(ch chan<- prometheus.Metric, node proxmox.GetNodesData) {
@@ -133,6 +177,7 @@ func (c *Collector) collectNodeUpMetric(ch chan<- prometheus.Metric, node proxmo
 
 type collectVirtualMachineMetricsResponse struct {
 	cpusAllocated int
+	memAllocated  int64
 }
 
 func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, vms *proxmox.GetNodeQemuResponse) collectVirtualMachineMetricsResponse {
@@ -147,12 +192,14 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, no
 
 		// Add to CPU allocated to VMs on this node metric
 		res.cpusAllocated += vm.Cpus
+		res.memAllocated += vm.MaxMem
 	}
 	return res
 }
 
 type collectLxcMetricsResponse struct {
 	cpusAllocated int
+	memAllocated  int64
 }
 
 func (c *Collector) collectLxcMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, lxcs *proxmox.GetNodeLxcResponse) collectLxcMetricsResponse {
@@ -167,6 +214,7 @@ func (c *Collector) collectLxcMetrics(ch chan<- prometheus.Metric, node proxmox.
 
 		// Add to CPU allocated to LXCs on this node metric
 		res.cpusAllocated += lxc.Cpus
+		res.memAllocated += lxc.MaxMem
 	}
 	return res
 }
