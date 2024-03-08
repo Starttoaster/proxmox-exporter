@@ -11,7 +11,6 @@ type NodeService struct {
 }
 
 // GetNodesResponse contains the response for the /nodes endpoint
-// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes
 type GetNodesResponse struct {
 	Data []GetNodesData `json:"data"`
 }
@@ -51,14 +50,13 @@ func (s *NodeService) GetNodes() (*GetNodesResponse, *http.Response, error) {
 	return d, resp, nil
 }
 
-// GetNodeResponse contains the response for the /nodes/{node}/status endpoint
-// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/status
-type GetNodeResponse struct {
-	Data GetNodeData `json:"data"`
+// GetNodeStatusResponse contains the response for the /nodes/{node}/status endpoint
+type GetNodeStatusResponse struct {
+	Data GetNodeStatusData `json:"data"`
 }
 
-// GetNodeData contains data of one node from a GetNode response
-type GetNodeData struct {
+// GetNodeStatusData contains data of one node from a GetNode response
+type GetNodeStatusData struct {
 	BootInfo      BootInfo      `json:"boot-info"`
 	CPU           float64       `json:"cpu"`
 	CPUInfo       CPUInfo       `json:"cpuinfo"`
@@ -75,17 +73,17 @@ type GetNodeData struct {
 	Wait          float64       `json:"wait"`
 }
 
-// GetNode makes a GET request to the /nodes/{node}/status endpoint
+// GetNodeStatus makes a GET request to the /nodes/{node}/status endpoint
 // This returns more information about a node than the /nodes endpoint
 // https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/status
-func (s *NodeService) GetNode(name string) (*GetNodeResponse, *http.Response, error) {
+func (s *NodeService) GetNodeStatus(name string) (*GetNodeStatusResponse, *http.Response, error) {
 	u := fmt.Sprintf("nodes/%s/status", name)
 	req, err := s.client.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	d := new(GetNodeResponse)
+	d := new(GetNodeStatusResponse)
 	resp, err := s.client.Do(req, d)
 	if err != nil {
 		return nil, resp, err
@@ -95,8 +93,12 @@ func (s *NodeService) GetNode(name string) (*GetNodeResponse, *http.Response, er
 }
 
 // GetNodeVersionResponse contains the response for the /nodes/{node}/version endpoint
-// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/version
 type GetNodeVersionResponse struct {
+	Data GetNodeVersionData `json:"data"`
+}
+
+// GetNodeVersionData contains the version data for one node from a GetNodeVersion request
+type GetNodeVersionData struct {
 	Release string `json:"release"`
 	RepoID  string `json:"repoid"`
 	Version string `json:"version"`
@@ -121,7 +123,6 @@ func (s *NodeService) GetNodeVersion(name string) (*GetNodeVersionResponse, *htt
 }
 
 // GetNodeQemuResponse contains the response for the /nodes/{node}/qemu endpoint
-// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes
 type GetNodeQemuResponse struct {
 	Data []GetNodeQemuData `json:"data"`
 }
@@ -164,7 +165,6 @@ func (s *NodeService) GetNodeQemu(name string) (*GetNodeQemuResponse, *http.Resp
 }
 
 // GetNodeLxcResponse contains the response for the /nodes/{node}/lxc endpoint
-// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/lxc
 type GetNodeLxcResponse struct {
 	Data []GetNodeLxcData `json:"data"`
 }
@@ -193,6 +193,50 @@ type GetNodeLxcData struct {
 // https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/lxc
 func (s *NodeService) GetNodeLxc(name string) (*GetNodeLxcResponse, *http.Response, error) {
 	u := fmt.Sprintf("nodes/%s/lxc", name)
+	req, err := s.client.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	d := new(GetNodeLxcResponse)
+	resp, err := s.client.Do(req, d)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return d, resp, nil
+}
+
+// GetNodeDisksListResponse contains the response for the /nodes/{node}/disks/list endpoint
+type GetNodeDisksListResponse struct {
+	Data []GetNodeDisksListData `json:"data"`
+}
+
+// GetNodeDisksListData contains data of one VM from a GetNodeLxc response
+type GetNodeDisksListData struct {
+	ByIDLink     string `json:"by_id_link"`
+	DevPath      string `json:"devpath"`
+	GPT          int    `json:"gpt"`
+	Health       string `json:"health"`
+	Model        string `json:"model"`
+	OSDID        int    `json:"osdid"`
+	OSDIDList    any    `json:"osdid-list"`
+	RPM          int    `json:"rpm"`
+	Serial       string `json:"serial"`
+	Size         int64  `json:"size"`
+	Type         string `json:"type"`
+	Used         string `json:"used"`
+	Vendor       string `json:"vendor"`
+	Wearout      int    `json:"wearout"`
+	WWN          string `json:"wwn"`
+	Bluestore    int    `json:"bluestore,omitempty"`
+	OSDEncrypted int    `json:"osdencrypted,omitempty"`
+}
+
+// GetNodeLxc makes a GET request to the /nodes/{node}/disks/list endpoint
+// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/disks/list
+func (s *NodeService) GetNodeDisksList(name string) (*GetNodeLxcResponse, *http.Response, error) {
+	u := fmt.Sprintf("nodes/%s/disks/list", name)
 	req, err := s.client.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, nil, err

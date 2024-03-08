@@ -40,12 +40,12 @@ func GetNodes() (*proxmox.GetNodesResponse, error) {
 }
 
 // GetNode returns a proxmox Node object or an error from the /nodes/%s/status endpoint
-func GetNode(name string) (*proxmox.GetNodeResponse, error) {
+func GetNode(name string) (*proxmox.GetNodeStatusResponse, error) {
 	// Chech cache
-	var node *proxmox.GetNodeResponse
+	var node *proxmox.GetNodeStatusResponse
 	if x, found := cash.Get(fmt.Sprintf("GetNode_%s", name)); found {
 		var ok bool
-		node, ok = x.(*proxmox.GetNodeResponse)
+		node, ok = x.(*proxmox.GetNodeStatusResponse)
 		if ok {
 			log.Logger.Debug("proxmox request was found in cache for Node", "node", name)
 			return node, nil
@@ -55,7 +55,7 @@ func GetNode(name string) (*proxmox.GetNodeResponse, error) {
 	// Make request if not found in cache
 	var err error
 	for _, c := range clients {
-		node, _, err = c.Nodes.GetNode(name)
+		node, _, err = c.Nodes.GetNodeStatus(name)
 		if err == nil {
 			break
 		}
