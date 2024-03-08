@@ -88,5 +88,3 @@ Node certificate expiry countdown days (gauge) (labels for certificate name, and
 
 Storage usage per volume per node (gauge) (labels for storage type, storage name, and what node it's on)
 Storage capacity per volume per node (gauge) (labels for storage type, storage name, and what node it's on)
-
-Smart status by disk in the cluster

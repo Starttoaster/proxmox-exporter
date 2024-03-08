@@ -219,15 +219,12 @@ type GetNodeDisksListData struct {
 	GPT          int    `json:"gpt"`
 	Health       string `json:"health"`
 	Model        string `json:"model"`
-	OSDID        int    `json:"osdid"`
-	OSDIDList    any    `json:"osdid-list"`
 	RPM          int    `json:"rpm"`
 	Serial       string `json:"serial"`
 	Size         int64  `json:"size"`
 	Type         string `json:"type"`
 	Used         string `json:"used"`
 	Vendor       string `json:"vendor"`
-	Wearout      int    `json:"wearout"`
 	WWN          string `json:"wwn"`
 	Bluestore    int    `json:"bluestore,omitempty"`
 	OSDEncrypted int    `json:"osdencrypted,omitempty"`
@@ -235,14 +232,14 @@ type GetNodeDisksListData struct {
 
 // GetNodeDisksList makes a GET request to the /nodes/{node}/disks/list endpoint
 // https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/disks/list
-func (s *NodeService) GetNodeDisksList(name string) (*GetNodeLxcResponse, *http.Response, error) {
+func (s *NodeService) GetNodeDisksList(name string) (*GetNodeDisksListResponse, *http.Response, error) {
 	u := fmt.Sprintf("nodes/%s/disks/list", name)
 	req, err := s.client.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	d := new(GetNodeLxcResponse)
+	d := new(GetNodeDisksListResponse)
 	resp, err := s.client.Do(req, d)
 	if err != nil {
 		return nil, resp, err

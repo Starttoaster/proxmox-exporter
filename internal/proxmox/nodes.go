@@ -16,7 +16,7 @@ func GetNodes() (*proxmox.GetNodesResponse, error) {
 		var ok bool
 		nodes, ok = x.(*proxmox.GetNodesResponse)
 		if ok {
-			log.Logger.Debug("proxmox request was found in cache for Nodes")
+			log.Logger.Debug("proxmox request was found in cache for GetNodes")
 			return nodes, nil
 		}
 	}
@@ -47,7 +47,7 @@ func GetNodeStatus(name string) (*proxmox.GetNodeStatusResponse, error) {
 		var ok bool
 		node, ok = x.(*proxmox.GetNodeStatusResponse)
 		if ok {
-			log.Logger.Debug("proxmox request was found in cache for Node", "node", name)
+			log.Logger.Debug("proxmox request was found in cache for GetNodeStatus", "node", name)
 			return node, nil
 		}
 	}
@@ -130,4 +130,35 @@ func GetNodeLxc(name string) (*proxmox.GetNodeLxcResponse, error) {
 	cash.Set(fmt.Sprintf("GetNodeLxc_%s", name), lxcs, cache.DefaultExpiration)
 
 	return lxcs, nil
+}
+
+// GetNodeDisksList returns the disks for a node
+func GetNodeDisksList(name string) (*proxmox.GetNodeDisksListResponse, error) {
+	// Chech cache
+	var disks *proxmox.GetNodeDisksListResponse
+	if x, found := cash.Get(fmt.Sprintf("GetNodeDisksList_%s", name)); found {
+		var ok bool
+		disks, ok = x.(*proxmox.GetNodeDisksListResponse)
+		if ok {
+			log.Logger.Debug("proxmox request was found in cache for GetNodeDisksList", "node", name)
+			return disks, nil
+		}
+	}
+
+	// Make request if not found in cache
+	var err error
+	for _, c := range clients {
+		disks, _, err = c.Nodes.GetNodeDisksList(name)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Update per-node cache since we have it
+	cash.Set(fmt.Sprintf("GetNodeDisksList_%s", name), disks, cache.DefaultExpiration)
+
+	return disks, nil
 }

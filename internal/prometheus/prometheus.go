@@ -27,6 +27,9 @@ type Collector struct {
 	clusterMemAlloc *prometheus.Desc
 	nodeMemTotal    *prometheus.Desc
 	nodeMemAlloc    *prometheus.Desc
+
+	// Disk
+	diskSmartHealth *prometheus.Desc
 }
 
 // NewCollector constructor function for Collector
@@ -85,6 +88,13 @@ func NewCollector() *Collector {
 		nodeMemAlloc: prometheus.NewDesc(fqAddPrefix("node_memory_allocated_bytes"),
 			"Total amount of memory allocated in bytes to guests for a node.",
 			[]string{"name"},
+			nil,
+		),
+
+		// Disk metrics
+		diskSmartHealth: prometheus.NewDesc(fqAddPrefix("node_disk_smart_status"),
+			"Disk SMART health status. (0=FAIL/Unknown,1=PASSED)",
+			[]string{"node", "devpath"},
 			nil,
 		),
 	}
@@ -148,6 +158,14 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			return
 		}
 		lxcMetrics := c.collectLxcMetrics(ch, node, lxcs)
+
+		// Get disk data on this node
+		disks, err := wrappedProxmox.GetNodeDisksList(node.Node)
+		if err != nil {
+			logger.Logger.Error(err.Error())
+			return
+		}
+		c.collectDiskMetrics(ch, node, disks)
 
 		// Collect metrics for this node
 		c.collectNodeUpMetric(ch, node)
@@ -226,4 +244,15 @@ func (c *Collector) collectLxcMetrics(ch chan<- prometheus.Metric, node proxmox.
 		res.memAllocated += lxc.MaxMem
 	}
 	return res
+}
+
+func (c *Collector) collectDiskMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, disks *proxmox.GetNodeDisksListResponse) {
+	for _, disk := range disks.Data {
+		// Add disk health metric
+		status := 0.0
+		if strings.EqualFold(disk.Health, "PASSED") {
+			status = 1.0
+		}
+		ch <- prometheus.MustNewConstMetric(c.diskSmartHealth, prometheus.GaugeValue, status, node.Node, disk.DevPath)
+	}
 }
