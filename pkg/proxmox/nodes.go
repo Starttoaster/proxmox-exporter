@@ -57,7 +57,7 @@ type GetNodeResponse struct {
 	Data GetNodeData `json:"data"`
 }
 
-// GetNodeResponse contains data of one node from a GetNode response
+// GetNodeData contains data of one node from a GetNode response
 type GetNodeData struct {
 	BootInfo      BootInfo      `json:"boot-info"`
 	CPU           float64       `json:"cpu"`
