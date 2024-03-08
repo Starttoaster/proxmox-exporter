@@ -65,29 +65,3 @@ func Init(endpoints []string, tokenID, token string, tlsVerify bool) error {
 
 	return nil
 }
-
-// anyClient ranges over the list of Proxmox clients available and returns the first found.
-// In Proxmox clusters, this gets us pseudo-random clients used for each request.
-// This leaves nilness checking to the consumer of this function,
-// but it may be presumable that an actual client is returned here
-// because we check for zero length clients in the init function
-func anyClient() *proxmox.Client {
-	for _, v := range clients {
-		return v
-	}
-	return nil
-}
-
-/*
-Unclear yet if this will end up being useful, maybe remove if we start feeling like the exporter is nearly complete and this still isn't used
-
-// theClient accepts the string key for a specific client, useful if the metric comes from a specific host in a cluster
-// Returns an error if the named client isn't found
-func theClient(k string) (*proxmox.Client, error) {
-	c := clients[k]
-	if c == nil {
-		return nil, fmt.Errorf("client specified by key \"%s\" not found", k)
-	}
-	return c, nil
-}
-*/

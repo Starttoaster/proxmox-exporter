@@ -54,8 +54,13 @@ func (s *NodeService) GetNodes() (*GetNodesResponse, *http.Response, error) {
 // GetNodeResponse contains the response for the /nodes/{node}/status endpoint
 // https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/status
 type GetNodeResponse struct {
+	Data GetNodeData `json:"data"`
+}
+
+// GetNodeResponse contains data of one node from a GetNode response
+type GetNodeData struct {
 	BootInfo      BootInfo      `json:"boot-info"`
-	CPU           int           `json:"cpu"`
+	CPU           float64       `json:"cpu"`
 	CPUInfo       CPUInfo       `json:"cpuinfo"`
 	CurrentKernel CurrentKernel `json:"current-kernel"`
 	Idle          int           `json:"idle"`
@@ -67,7 +72,7 @@ type GetNodeResponse struct {
 	RootFs        RootFs        `json:"rootfs"`
 	Swap          Swap          `json:"swap"`
 	Uptime        int           `json:"uptime"`
-	Wait          int           `json:"wait"`
+	Wait          float64       `json:"wait"`
 }
 
 // GetNode makes a GET request to the /nodes/{node}/status endpoint

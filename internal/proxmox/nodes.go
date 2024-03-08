@@ -22,7 +22,13 @@ func GetNodes() (*proxmox.GetNodesResponse, error) {
 	}
 
 	// Make request if not found in cache
-	nodes, _, err := anyClient().Nodes.GetNodes()
+	var err error
+	for _, c := range clients {
+		nodes, _, err = c.Nodes.GetNodes()
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +53,13 @@ func GetNode(name string) (*proxmox.GetNodeResponse, error) {
 	}
 
 	// Make request if not found in cache
-	node, _, err := anyClient().Nodes.GetNode(name)
+	var err error
+	for _, c := range clients {
+		node, _, err = c.Nodes.GetNode(name)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +84,13 @@ func GetNodeQemu(name string) (*proxmox.GetNodeQemuResponse, error) {
 	}
 
 	// Make request if not found in cache
-	vms, _, err := anyClient().Nodes.GetNodeQemu(name)
+	var err error
+	for _, c := range clients {
+		vms, _, err = c.Nodes.GetNodeQemu(name)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -97,13 +115,19 @@ func GetNodeLxc(name string) (*proxmox.GetNodeLxcResponse, error) {
 	}
 
 	// Make request if not found in cache
-	vms, _, err := anyClient().Nodes.GetNodeLxc(name)
+	var err error
+	for _, c := range clients {
+		lxcs, _, err = c.Nodes.GetNodeLxc(name)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
 
 	// Update per-node cache since we have it
-	cash.Set(fmt.Sprintf("GetNodeLxc_%s", name), vms, cache.DefaultExpiration)
+	cash.Set(fmt.Sprintf("GetNodeLxc_%s", name), lxcs, cache.DefaultExpiration)
 
-	return vms, nil
+	return lxcs, nil
 }

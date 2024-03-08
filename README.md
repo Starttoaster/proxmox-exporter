@@ -66,14 +66,9 @@ Documentation and deployment details in progress.
 - Finish documentation
 
 ## Planned metrics
-
-Cluster CPUs used (gauge)
-Cluster CPUs total (gauge)
 Cluster memory used (gauge)
 Cluster memory total (gauge)
 
-Node CPUs allocated (gauge)
-Node CPUs total (gauge)
 Node mem allocated (gauge)
 Node mem total (gauge)
 
@@ -81,3 +76,5 @@ Node certificate expiry countdown days (gauge) (labels for certificate name, and
 
 Storage usage per volume per node (gauge) (labels for storage type, storage name, and what node it's on)
 Storage capacity per volume per node (gauge) (labels for storage type, storage name, and what node it's on)
+
+Smart status by disk in the cluster
