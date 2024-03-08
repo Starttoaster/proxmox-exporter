@@ -62,7 +62,7 @@ func init() {
 
 	rootCmd.PersistentFlags().String("log-level", "info", "The log-level for the application, can be one of info, warn, error, debug.")
 	rootCmd.PersistentFlags().Uint16("server-port", 8080, "The port the metrics server binds to.")
-	rootCmd.PersistentFlags().String("proxmox-endpoints", "", "The Proxmox API endpoint, you can pass in multiple endpoints separated by commas (ex: https://localhost:8006/api2/json)")
+	rootCmd.PersistentFlags().String("proxmox-endpoints", "", "The Proxmox API endpoint, you can pass in multiple endpoints separated by commas (ex: https://localhost:8006/)")
 	rootCmd.PersistentFlags().String("proxmox-token-id", "", "Proxmox API token ID")
 	rootCmd.PersistentFlags().String("proxmox-token", "", "Proxmox API token")
 	rootCmd.PersistentFlags().Bool("proxmox-api-insecure", false, "Whether or not this client should accept insecure connections to Proxmox (default: false)")

@@ -1,21 +1,20 @@
 package proxmox
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/luthermonson/go-proxmox"
 	"github.com/patrickmn/go-cache"
 	log "github.com/starttoaster/proxmox-exporter/internal/logger"
+	"github.com/starttoaster/proxmox-exporter/pkg/proxmox"
 )
 
-// Nodes returns a proxmox NodeStatuses object or an error from the /nodes endpoint
-func Nodes() (proxmox.NodeStatuses, error) {
+// GetNodes returns a proxmox NodeStatuses object or an error from the /nodes endpoint
+func GetNodes() (*proxmox.GetNodesResponse, error) {
 	// Chech cache
-	var nodes proxmox.NodeStatuses
-	if x, found := cash.Get("Nodes"); found {
+	var nodes *proxmox.GetNodesResponse
+	if x, found := cash.Get("GetNodes"); found {
 		var ok bool
-		nodes, ok = x.(proxmox.NodeStatuses)
+		nodes, ok = x.(*proxmox.GetNodesResponse)
 		if ok {
 			log.Logger.Debug("proxmox request was found in cache for Nodes")
 			return nodes, nil
@@ -23,24 +22,24 @@ func Nodes() (proxmox.NodeStatuses, error) {
 	}
 
 	// Make request if not found in cache
-	nodes, err := anyClient().Nodes(context.Background())
+	nodes, _, err := anyClient().Nodes.GetNodes()
 	if err != nil {
-		return nil, fmt.Errorf("encountered error making request to /nodes: \n%v", err)
+		return nil, err
 	}
 
 	// Update cache
-	cash.Set("Nodes", nodes, cache.DefaultExpiration)
+	cash.Set("GetNodes", nodes, cache.DefaultExpiration)
 
 	return nodes, nil
 }
 
-// Node returns a proxmox Node object or an error from the /nodes/%s/status endpoint
-func Node(name string) (*proxmox.Node, error) {
+// GetNode returns a proxmox Node object or an error from the /nodes/%s/status endpoint
+func GetNode(name string) (*proxmox.GetNodeResponse, error) {
 	// Chech cache
-	var node *proxmox.Node
-	if x, found := cash.Get(fmt.Sprintf("Node_%s", name)); found {
+	var node *proxmox.GetNodeResponse
+	if x, found := cash.Get(fmt.Sprintf("GetNode_%s", name)); found {
 		var ok bool
-		node, ok = x.(*proxmox.Node)
+		node, ok = x.(*proxmox.GetNodeResponse)
 		if ok {
 			log.Logger.Debug("proxmox request was found in cache for Node", "node", name)
 			return node, nil
@@ -48,13 +47,63 @@ func Node(name string) (*proxmox.Node, error) {
 	}
 
 	// Make request if not found in cache
-	node, err := anyClient().Node(context.Background(), name)
+	node, _, err := anyClient().Nodes.GetNode(name)
 	if err != nil {
-		return nil, fmt.Errorf("encountered error making request to /nodes/%s/status: \n%v", name, err)
+		return nil, err
 	}
 
 	// Update cache
-	cash.Set(fmt.Sprintf("Node_%s", name), node, cache.DefaultExpiration)
+	cash.Set(fmt.Sprintf("GetNode_%s", name), node, cache.DefaultExpiration)
 
 	return node, nil
+}
+
+// GetNodeQemu returns the virtual machines for a node
+func GetNodeQemu(name string) (*proxmox.GetNodeQemuResponse, error) {
+	// Chech cache
+	var vms *proxmox.GetNodeQemuResponse
+	if x, found := cash.Get(fmt.Sprintf("GetNodeQemu_%s", name)); found {
+		var ok bool
+		vms, ok = x.(*proxmox.GetNodeQemuResponse)
+		if ok {
+			log.Logger.Debug("proxmox request was found in cache for GetNodeQemu", "node", name)
+			return vms, nil
+		}
+	}
+
+	// Make request if not found in cache
+	vms, _, err := anyClient().Nodes.GetNodeQemu(name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update per-node cache since we have it
+	cash.Set(fmt.Sprintf("GetNodeQemu_%s", name), vms, cache.DefaultExpiration)
+
+	return vms, nil
+}
+
+// GetNodeLxc returns the LXCs for a node
+func GetNodeLxc(name string) (*proxmox.GetNodeLxcResponse, error) {
+	// Chech cache
+	var lxcs *proxmox.GetNodeLxcResponse
+	if x, found := cash.Get(fmt.Sprintf("GetNodeLxc_%s", name)); found {
+		var ok bool
+		lxcs, ok = x.(*proxmox.GetNodeLxcResponse)
+		if ok {
+			log.Logger.Debug("proxmox request was found in cache for GetNodeLxc", "node", name)
+			return lxcs, nil
+		}
+	}
+
+	// Make request if not found in cache
+	vms, _, err := anyClient().Nodes.GetNodeLxc(name)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update per-node cache since we have it
+	cash.Set(fmt.Sprintf("GetNodeLxc_%s", name), vms, cache.DefaultExpiration)
+
+	return vms, nil
 }

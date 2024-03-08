@@ -1,9 +1,7 @@
 package proxmox
 
 import (
-	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,7 +10,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	log "github.com/starttoaster/proxmox-exporter/internal/logger"
 
-	"github.com/luthermonson/go-proxmox"
+	"github.com/starttoaster/proxmox-exporter/pkg/proxmox"
 )
 
 var (
@@ -46,26 +44,19 @@ func Init(endpoints []string, tokenID, token string, tlsVerify bool) error {
 		}
 		hostname := parsedURL.Hostname()
 
-		// Add client to map
+		// Create API client
 		log.Logger.Debug("Creating Proxmox client", "endpoint", endpoint, "hostname", hostname)
-		clients[hostname] = proxmox.NewClient(endpoint,
-			proxmox.WithHTTPClient(&httpClient),
-			proxmox.WithAPIToken(tokenID, token),
+		c, err := proxmox.NewClient(tokenID, token,
+			proxmox.WithBaseURL(endpoint),
+			proxmox.WithHttpClient(&httpClient),
 		)
-	}
+		if err != nil {
+			return fmt.Errorf("error creating API client for exporter: %w", err)
+		}
 
-	// Test API client with a request to the server
-	log.Logger.Debug("Testing Proxmox API client with request to server version")
-	version, err := anyClient().Version(context.Background())
-	if err != nil {
-		return fmt.Errorf("error retrieving Proxmox server version: \n%v", err)
+		// Add client to map
+		clients[hostname] = c
 	}
-
-	// Check and log version
-	if version == nil {
-		return errors.New("the Proxmox server returned no error from version request, but version is nil")
-	}
-	log.Logger.Debug("Proxmox server", "version", version.Release)
 
 	// init cache -- at longest, cache will live for 29 seconds
 	// which should ensure metrics are updated if scraping in 30 second intervals

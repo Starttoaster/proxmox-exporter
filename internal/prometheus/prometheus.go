@@ -1,7 +1,8 @@
 package prometheus
 
 import (
-	"github.com/luthermonson/go-proxmox"
+	"strings"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/starttoaster/proxmox-exporter/internal/logger"
 	wrappedProxmox "github.com/starttoaster/proxmox-exporter/internal/proxmox"
@@ -16,7 +17,7 @@ type Collector struct {
 func NewCollector() *Collector {
 	return &Collector{
 		up: prometheus.NewDesc(fqAddPrefix("up"),
-			"Shows whether nodes and vms in a proxmox cluster are up. (0=down,1=up)",
+			"Shows whether nodes, VMs, and LXCs in a proxmox cluster are up. (0=down,1=up)",
 			[]string{"type", "name"},
 			nil,
 		),
@@ -31,42 +32,59 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 // Collect instructs the prometheus client how to collect the metrics for each descriptor
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	// Retrieve node statuses for the cluster
-	nodeStatuses, err := wrappedProxmox.Nodes()
+	nodes, err := wrappedProxmox.GetNodes()
 	if err != nil {
 		logger.Logger.Error(err.Error())
 		return
 	}
 
 	// Retrieve node info for each node from statuses
-	var nodes []*proxmox.Node
-	for _, nodeStatus := range nodeStatuses {
+	for _, node := range nodes.Data {
+		// Get Node status online float metric from string
+		var nodeStatusOnline float64
+		if strings.EqualFold(node.Status, "online") {
+			nodeStatusOnline = 1.0
+		}
+
 		// Add node up metric
-		ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, float64(nodeStatus.Online), "node", nodeStatus.Name)
+		ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, nodeStatusOnline, node.Type, node.Node)
 
-		// Get node from node status's name
-		node, err := wrappedProxmox.Node(nodeStatus.Name)
-		if err != nil {
-			logger.Logger.Error(err.Error())
-			return
-		}
-		nodes = append(nodes, node)
-	}
-
-	for _, node := range nodes {
-		// Get VMs for node
-		vms, err := wrappedProxmox.VirtualMachinesOnNode(node)
+		// Get VM statuses from each node
+		vms, err := wrappedProxmox.GetNodeQemu(node.Node)
 		if err != nil {
 			logger.Logger.Error(err.Error())
 			return
 		}
 
-		for _, vm := range vms {
-			// Add vm up metric
-			var vmUp float64 = 0.0
-			if vm.IsRunning() {
-				vmUp = 1.0
+		// Retrieve info for each VM
+		for _, vm := range vms.Data {
+			// Get Node status online float metric from string
+			var vmStatusOnline float64
+			if strings.EqualFold(vm.Status, "running") {
+				vmStatusOnline = 1.0
 			}
-			ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, vmUp, "qemu", vm.Name)
+
+			// Add node up metric
+			ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, vmStatusOnline, "qemu", vm.Name)
+		}
+
+		// Get LXC statuses from each node
+		lxcs, err := wrappedProxmox.GetNodeLxc(node.Node)
+		if err != nil {
+			logger.Logger.Error(err.Error())
+			return
+		}
+
+		// Retrieve info for each LXC
+		for _, lxc := range lxcs.Data {
+			// Get LXC status online float metric from string
+			var lxcStatusOnline float64
+			if strings.EqualFold(lxc.Status, "running") {
+				lxcStatusOnline = 1.0
+			}
+
+			// Add node up metric
+			ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, lxcStatusOnline, lxc.Type, lxc.Name)
 		}
 	}
 }
