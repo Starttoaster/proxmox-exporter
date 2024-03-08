@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -32,7 +33,7 @@ func NewCollector() *Collector {
 		),
 		guestUp: prometheus.NewDesc(fqAddPrefix("guest_up"),
 			"Shows whether VMs and LXCs in a proxmox cluster are up. (0=down,1=up)",
-			[]string{"type", "name", "host"},
+			[]string{"type", "name", "vmid", "host"},
 			nil,
 		),
 
@@ -142,7 +143,7 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, no
 		if strings.EqualFold(vm.Status, "running") {
 			status = 1.0
 		}
-		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, "qemu", vm.Name, node.Node)
+		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, "qemu", vm.Name, strconv.Itoa(vm.VMID), node.Node)
 
 		// Add to CPU allocated to VMs on this node metric
 		res.cpusAllocated += vm.Cpus
@@ -162,7 +163,7 @@ func (c *Collector) collectLxcMetrics(ch chan<- prometheus.Metric, node proxmox.
 		if strings.EqualFold(lxc.Status, "running") {
 			status = 1.0
 		}
-		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, lxc.Type, lxc.Name, node.Node)
+		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, lxc.Type, lxc.Name, lxc.VMID, node.Node)
 
 		// Add to CPU allocated to LXCs on this node metric
 		res.cpusAllocated += lxc.Cpus

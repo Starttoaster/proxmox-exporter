@@ -11,16 +11,33 @@ This exporter avoids exporting metrics which are redundant to metrics that may b
 ## Metrics
 
 ```
+# HELP proxmox_cluster_cpus_allocated Total number of vCPU (cores/threads) allocated to guests for a cluster.
+# TYPE proxmox_cluster_cpus_allocated gauge
+proxmox_cluster_cpus_allocated 24
+# HELP proxmox_cluster_cpus_total Total number of vCPU (cores/threads) for a cluster.
+# TYPE proxmox_cluster_cpus_total gauge
+proxmox_cluster_cpus_total 32
 # HELP proxmox_guest_up Shows whether VMs and LXCs in a proxmox cluster are up. (0=down,1=up)
 # TYPE proxmox_guest_up gauge
-proxmox_guest_up{host="proxmox1",name="CT101",type="lxc"} 0
-proxmox_guest_up{host="proxmox2",name="vm1",type="qemu"} 1
-proxmox_guest_up{host="proxmox3",name="vm2",type="qemu"} 1
-# HELP proxmox_host_up Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)
-# TYPE proxmox_host_up gauge
-proxmox_host_up{name="proxmox1",type="node"} 1
-proxmox_host_up{name="proxmox2",type="node"} 1
-proxmox_host_up{name="proxmox3",type="node"} 1
+proxmox_guest_up{host="proxmox1",name="CT101",type="lxc",vmid="101"} 0
+proxmox_guest_up{host="proxmox1",name="worker1",type="qemu",vmid="102"} 1
+proxmox_guest_up{host="proxmox2",name="worker2",type="qemu",vmid="103"} 1
+proxmox_guest_up{host="proxmox3",name="worker3",type="qemu",vmid="104"} 1
+# HELP proxmox_node_cpus_allocated Total number of vCPU (cores/threads) allocated to guests for a node.
+# TYPE proxmox_node_cpus_allocated gauge
+proxmox_node_cpus_allocated{name="proxmox1"} 12
+proxmox_node_cpus_allocated{name="proxmox2"} 6
+proxmox_node_cpus_allocated{name="proxmox3"} 6
+# HELP proxmox_node_cpus_total Total number of vCPU (cores/threads) for a node.
+# TYPE proxmox_node_cpus_total gauge
+proxmox_node_cpus_total{name="proxmox1"} 16
+proxmox_node_cpus_total{name="proxmox2"} 8
+proxmox_node_cpus_total{name="proxmox3"} 8
+# HELP proxmox_node_up Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)
+# TYPE proxmox_node_up gauge
+proxmox_node_up{name="proxmox1",type="node"} 1
+proxmox_node_up{name="proxmox2",type="node"} 1
+proxmox_node_up{name="proxmox3",type="node"} 1
 ```
 
 ## How to use
