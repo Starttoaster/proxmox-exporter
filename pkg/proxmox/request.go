@@ -73,7 +73,8 @@ func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
 	}()
 
 	// Check for error API response and capture it as an error
-	if resp.StatusCode > 399 {
+	// 3xx codes get treated as errors, unclear if there's a valid reason for redirection here
+	if resp.StatusCode > 299 {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("error reading Proxmox response body: %v", err)
