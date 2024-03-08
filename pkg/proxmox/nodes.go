@@ -22,7 +22,7 @@ type GetNodesData struct {
 	Disk           int64   `json:"disk"`
 	ID             string  `json:"id"`
 	Level          string  `json:"level"`
-	MaxCpu         int     `json:"maxcpu"`
+	MaxCPU         int     `json:"maxcpu"`
 	MaxDisk        int64   `json:"maxdisk"`
 	MaxMem         int64   `json:"maxmem"`
 	Mem            int64   `json:"mem"`
@@ -56,7 +56,7 @@ func (s *NodeService) GetNodes() (*GetNodesResponse, *http.Response, error) {
 type GetNodeResponse struct {
 	BootInfo      BootInfo      `json:"boot-info"`
 	CPU           int           `json:"cpu"`
-	CpuInfo       CpuInfo       `json:"cpuinfo"`
+	CPUInfo       CPUInfo       `json:"cpuinfo"`
 	CurrentKernel CurrentKernel `json:"current-kernel"`
 	Idle          int           `json:"idle"`
 	Ksm           Ksm           `json:"ksm"`
@@ -115,7 +115,7 @@ func (s *NodeService) GetNodeVersion(name string) (*GetNodeVersionResponse, *htt
 	return d, resp, nil
 }
 
-// GetNodesResponse contains the response for the /nodes/{node}/qemu endpoint
+// GetNodeQemuResponse contains the response for the /nodes/{node}/qemu endpoint
 // https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes
 type GetNodeQemuResponse struct {
 	Data []GetNodeQemuData `json:"data"`
@@ -137,7 +137,7 @@ type GetNodeQemuData struct {
 	Pid       int     `json:"pid"`
 	Status    string  `json:"status"`
 	Uptime    int     `json:"uptime"`
-	VmId      int     `json:"vmid"`
+	VMID      int     `json:"vmid"`
 }
 
 // GetNodeQemu makes a GET request to the /nodes/{node}/qemu endpoint
@@ -181,7 +181,7 @@ type GetNodeLxcData struct {
 	Status    string  `json:"status"`
 	Type      string  `json:"type"`
 	Uptime    int     `json:"uptime"`
-	VmId      string  `json:"vmid"`
+	VMID      string  `json:"vmid"`
 }
 
 // GetNodeLxc makes a GET request to the /nodes/{node}/lxc endpoint

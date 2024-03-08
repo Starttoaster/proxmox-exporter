@@ -43,8 +43,8 @@ func NewClient(tokenID string, token string, options ...ClientOptionFunc) (*Clie
 	}
 
 	// Set the client default fields
-	c.setBaseURL(defaultBaseURL)
-	c.setHttpClient(&http.Client{})
+	_ = c.setBaseURL(defaultBaseURL)
+	_ = c.setHTTPClient(&http.Client{})
 
 	// Apply any given options
 	for _, fn := range options {
@@ -96,15 +96,15 @@ func (c *Client) setBaseURL(urlStr string) error {
 	return nil
 }
 
-// WithHttpClient sets the HTTP client for API requests to something other than the default Go http Client
-func WithHttpClient(client *http.Client) ClientOptionFunc {
+// WithHTTPClient sets the HTTP client for API requests to something other than the default Go http Client
+func WithHTTPClient(client *http.Client) ClientOptionFunc {
 	return func(c *Client) error {
-		return c.setHttpClient(client)
+		return c.setHTTPClient(client)
 	}
 }
 
-// setHttpClient sets the HTTP client for API requests
-func (c *Client) setHttpClient(client *http.Client) error {
+// setHTTPClient sets the HTTP client for API requests
+func (c *Client) setHTTPClient(client *http.Client) error {
 	c.client = client
 	return nil
 }

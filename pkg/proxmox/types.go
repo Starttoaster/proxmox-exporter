@@ -1,11 +1,13 @@
 package proxmox
 
+// BootInfo info about host boot
 type BootInfo struct {
 	Mode       string `json:"mode"`
 	SecureBoot int    `json:"secureboot"`
 }
 
-type CpuInfo struct {
+// CPUInfo info about host CPU
+type CPUInfo struct {
 	Cores   int    `json:"cores"`
 	Cpus    int    `json:"cpus"`
 	Flags   string `json:"flags"`
@@ -16,6 +18,7 @@ type CpuInfo struct {
 	UserHz  int    `json:"user_hz"`
 }
 
+// CurrentKernel info about host kernel
 type CurrentKernel struct {
 	Machine string `json:"machine"`
 	Release string `json:"release"`
@@ -23,16 +26,19 @@ type CurrentKernel struct {
 	Version string `json:"version"`
 }
 
+// Ksm info about Kernel same-page merging
 type Ksm struct {
 	Shared int `json:"shared"`
 }
 
+// Memory info about host memory
 type Memory struct {
 	Free  int64 `json:"free"`
 	Total int64 `json:"total"`
 	Used  int64 `json:"used"`
 }
 
+// RootFs info about the host root filesystem
 type RootFs struct {
 	Avail int64 `json:"avail"`
 	Free  int64 `json:"free"`
@@ -40,6 +46,7 @@ type RootFs struct {
 	Used  int64 `json:"used"`
 }
 
+// Swap info about swap
 type Swap struct {
 	Free  int64 `json:"free"`
 	Total int64 `json:"total"`

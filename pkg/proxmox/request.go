@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -60,8 +61,16 @@ func (c *Client) Do(req *http.Request, v interface{}) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	defer io.Copy(io.Discard, resp.Body)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Printf("proxmox client couldn't close the response body: %v", err)
+		}
+	}()
+	defer func() {
+		if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+			log.Printf("proxmox client couldn't discard the response body: %v", err)
+		}
+	}()
 
 	// Check for error API response and capture it as an error
 	if resp.StatusCode > 399 {

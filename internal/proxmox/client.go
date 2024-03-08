@@ -48,7 +48,7 @@ func Init(endpoints []string, tokenID, token string, tlsVerify bool) error {
 		log.Logger.Debug("Creating Proxmox client", "endpoint", endpoint, "hostname", hostname)
 		c, err := proxmox.NewClient(tokenID, token,
 			proxmox.WithBaseURL(endpoint),
-			proxmox.WithHttpClient(&httpClient),
+			proxmox.WithHTTPClient(&httpClient),
 		)
 		if err != nil {
 			return fmt.Errorf("error creating API client for exporter: %w", err)
