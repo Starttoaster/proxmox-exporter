@@ -10,15 +10,21 @@ import (
 
 // Collector contains all prometheus metric Descs
 type Collector struct {
-	up *prometheus.Desc
+	hostUp  *prometheus.Desc
+	guestUp *prometheus.Desc
 }
 
 // NewCollector constructor function for Collector
 func NewCollector() *Collector {
 	return &Collector{
-		up: prometheus.NewDesc(fqAddPrefix("up"),
-			"Shows whether nodes, VMs, and LXCs in a proxmox cluster are up. (0=down,1=up)",
+		hostUp: prometheus.NewDesc(fqAddPrefix("host_up"),
+			"Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)",
 			[]string{"type", "name"},
+			nil,
+		),
+		guestUp: prometheus.NewDesc(fqAddPrefix("guest_up"),
+			"Shows whether VMs and LXCs in a proxmox cluster are up. (0=down,1=up)",
+			[]string{"type", "name", "host"},
 			nil,
 		),
 	}
@@ -26,7 +32,8 @@ func NewCollector() *Collector {
 
 // Describe contains all the prometheus descriptors for this metric collector
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- c.up
+	ch <- c.hostUp
+	ch <- c.guestUp
 }
 
 // Collect instructs the prometheus client how to collect the metrics for each descriptor
@@ -47,7 +54,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		}
 
 		// Add node up metric
-		ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, nodeStatusOnline, node.Type, node.Node)
+		ch <- prometheus.MustNewConstMetric(c.hostUp, prometheus.GaugeValue, nodeStatusOnline, node.Type, node.Node)
 
 		// Get VM statuses from each node
 		vms, err := wrappedProxmox.GetNodeQemu(node.Node)
@@ -65,7 +72,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			}
 
 			// Add node up metric
-			ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, vmStatusOnline, "qemu", vm.Name)
+			ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, vmStatusOnline, "qemu", vm.Name, node.Node)
 		}
 
 		// Get LXC statuses from each node
@@ -84,7 +91,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			}
 
 			// Add node up metric
-			ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, lxcStatusOnline, lxc.Type, lxc.Name)
+			ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, lxcStatusOnline, lxc.Type, lxc.Name, node.Node)
 		}
 	}
 }
