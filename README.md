@@ -49,9 +49,13 @@ helm upgrade --install --create-namespace -n proxmox-exporter proxmox-exporter .
 Charts are also published in the releases of this project, which can be installed like this:
 
 ```bash
+# Add the repo
+helm repo add proxmox-exporter https://starttoaster.github.io/proxmox-exporter
+
+# Install the chart
 helm upgrade --install --create-namespace \
 -n proxmox-exporter proxmox-exporter \
-https://github.com/Starttoaster/proxmox-exporter/releases/download/proxmox-exporter-0.1.0/proxmox-exporter-0.1.0.tgz
+proxmox-exporter/proxmox-exporter
 ```
 
 If installing this way, you can set configuration variables with the `--set` flag.
