@@ -55,7 +55,6 @@ Documentation and deployment details in progress.
 
 ## TODO
 
-- Add docker container publish workflow
 - Add helm chart and deployment documentation
 - Add example grafana dashboard from metrics
 
@@ -92,15 +91,15 @@ proxmox_guest_up{host="proxmox3",name="worker3",type="qemu",vmid="105"} 1
 
 # HELP proxmox_node_cpus_allocated Total number of vCPU (cores/threads) allocated to guests for a node.
 # TYPE proxmox_node_cpus_allocated gauge
-proxmox_node_cpus_allocated{name="proxmox1"} 12
-proxmox_node_cpus_allocated{name="proxmox2"} 6
-proxmox_node_cpus_allocated{name="proxmox3"} 6
+proxmox_node_cpus_allocated{node="proxmox1"} 12
+proxmox_node_cpus_allocated{node="proxmox2"} 6
+proxmox_node_cpus_allocated{node="proxmox3"} 6
 
 # HELP proxmox_node_cpus_total Total number of vCPU (cores/threads) for a node.
 # TYPE proxmox_node_cpus_total gauge
-proxmox_node_cpus_total{name="proxmox1"} 16
-proxmox_node_cpus_total{name="proxmox2"} 8
-proxmox_node_cpus_total{name="proxmox3"} 8
+proxmox_node_cpus_total{node="proxmox1"} 16
+proxmox_node_cpus_total{node="proxmox2"} 8
+proxmox_node_cpus_total{node="proxmox3"} 8
 
 # HELP proxmox_node_days_until_cert_expiration Number of days until a certificate in PVE expires. Can report 0 days on metric collection errors, check exporter logs.
 # TYPE proxmox_node_days_until_cert_expiration gauge
@@ -123,15 +122,15 @@ proxmox_node_disk_smart_status{devpath="/dev/sdb",node="proxmox1"} 1
 
 # HELP proxmox_node_memory_allocated_bytes Total amount of memory allocated in bytes to guests for a node.
 # TYPE proxmox_node_memory_allocated_bytes gauge
-proxmox_node_memory_allocated_bytes{name="proxmox1"} 3.9191576576e+10
-proxmox_node_memory_allocated_bytes{name="proxmox2"} 1.2884901888e+10
-proxmox_node_memory_allocated_bytes{name="proxmox3"} 1.2884901888e+10
+proxmox_node_memory_allocated_bytes{node="proxmox1"} 3.9191576576e+10
+proxmox_node_memory_allocated_bytes{node="proxmox2"} 1.2884901888e+10
+proxmox_node_memory_allocated_bytes{node="proxmox3"} 1.2884901888e+10
 
 # HELP proxmox_node_memory_total_bytes Total amount of memory in bytes for a nodes.
 # TYPE proxmox_node_memory_total_bytes gauge
-proxmox_node_memory_total_bytes{name="proxmox1"} 1.34850502656e+11
-proxmox_node_memory_total_bytes{name="proxmox2"} 1.6367079424e+10
-proxmox_node_memory_total_bytes{name="proxmox3"} 1.6367751168e+10
+proxmox_node_memory_total_bytes{node="proxmox1"} 1.34850502656e+11
+proxmox_node_memory_total_bytes{node="proxmox2"} 1.6367079424e+10
+proxmox_node_memory_total_bytes{node="proxmox3"} 1.6367751168e+10
 
 # HELP proxmox_node_storage_total_bytes Total amount of storage available in a volume on a node by storage type.
 # TYPE proxmox_node_storage_total_bytes gauge
@@ -165,9 +164,9 @@ proxmox_node_storage_used_bytes{node="proxmox3",storage="pool1",type="rbd"} 6.83
 
 # HELP proxmox_node_up Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)
 # TYPE proxmox_node_up gauge
-proxmox_node_up{name="proxmox1",type="node"} 1
-proxmox_node_up{name="proxmox2",type="node"} 1
-proxmox_node_up{name="proxmox3",type="node"} 1
+proxmox_node_up{node="proxmox1",type="node"} 1
+proxmox_node_up{node="proxmox2",type="node"} 1
+proxmox_node_up{node="proxmox3",type="node"} 1
 
 # HELP proxmox_node_version Shows PVE manager node version information
 # TYPE proxmox_node_version gauge

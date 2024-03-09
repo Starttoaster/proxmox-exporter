@@ -53,9 +53,6 @@ jobs:
       - name: Build Docker Container
         uses: docker/build-push-action@v5
         with:
-          context: ${{ inputs.docker-context }}
-          file: ${{ inputs.dockerfile }}
-          platforms: ${{ inputs.docker-platforms }}
+          platforms: "linux/amd64,linux/arm64"
           push: ${{ (github.event_name != 'pull_request') || (github.event.pull_request.head.repo.full_name == github.repository && !startsWith(github.ref, 'refs/heads/dependabot/')) && 'true' || 'false' }}
           tags: ${{ steps.meta.outputs.tags }}
-          build-args: ${{ inputs.build-args }}
