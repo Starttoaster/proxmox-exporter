@@ -33,22 +33,22 @@ type Ksm struct {
 
 // Memory info about host memory
 type Memory struct {
-	Free  int64 `json:"free"`
-	Total int64 `json:"total"`
-	Used  int64 `json:"used"`
+	Free  int `json:"free"`
+	Total int `json:"total"`
+	Used  int `json:"used"`
 }
 
 // RootFs info about the host root filesystem
 type RootFs struct {
-	Avail int64 `json:"avail"`
-	Free  int64 `json:"free"`
-	Total int64 `json:"total"`
-	Used  int64 `json:"used"`
+	Avail int `json:"avail"`
+	Free  int `json:"free"`
+	Total int `json:"total"`
+	Used  int `json:"used"`
 }
 
 // Swap info about swap
 type Swap struct {
-	Free  int64 `json:"free"`
-	Total int64 `json:"total"`
-	Used  int64 `json:"used"`
+	Free  int `json:"free"`
+	Total int `json:"total"`
+	Used  int `json:"used"`
 }

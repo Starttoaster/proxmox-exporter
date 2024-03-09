@@ -148,8 +148,8 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	// Cluster level metric variables (added to in each iteration of the loop below)
 	clusterCPUs := 0
 	clusterCPUsAlloc := 0
-	clusterMem := int64(0)
-	clusterMemAlloc := int64(0)
+	clusterMem := 0
+	clusterMemAlloc := 0
 
 	// Retrieve node info for each node from statuses
 	for _, node := range nodes.Data {
@@ -225,7 +225,7 @@ func (c *Collector) collectNodeUpMetric(ch chan<- prometheus.Metric, node proxmo
 // usually for node-level or cluster-level metrics
 type collectVirtualMachineMetricsResponse struct {
 	cpusAllocated int
-	memAllocated  int64
+	memAllocated  int
 }
 
 // collectLxcMetrics adds metrics to the registry that are per-VM and returns VM aggregate data for higher level metrics
@@ -250,7 +250,7 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, no
 // usually for node-level or cluster-level metrics
 type collectLxcMetricsResponse struct {
 	cpusAllocated int
-	memAllocated  int64
+	memAllocated  int
 }
 
 // collectLxcMetrics adds metrics to the registry that are per-LXC and returns LXC aggregate data for higher level metrics

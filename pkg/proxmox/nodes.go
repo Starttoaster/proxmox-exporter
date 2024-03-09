@@ -18,13 +18,13 @@ type GetNodesResponse struct {
 // GetNodesData contains data of one node from a GetNodes response
 type GetNodesData struct {
 	CPU            float64 `json:"cpu"`
-	Disk           int64   `json:"disk"`
+	Disk           int     `json:"disk"`
 	ID             string  `json:"id"`
 	Level          string  `json:"level"`
 	MaxCPU         int     `json:"maxcpu"`
-	MaxDisk        int64   `json:"maxdisk"`
-	MaxMem         int64   `json:"maxmem"`
-	Mem            int64   `json:"mem"`
+	MaxDisk        int     `json:"maxdisk"`
+	MaxMem         int     `json:"maxmem"`
+	Mem            int     `json:"mem"`
 	Node           string  `json:"node"`
 	SslFingerprint string  `json:"ssl_fingerprint"`
 	Status         string  `json:"status"`
@@ -134,12 +134,12 @@ type GetNodeQemuData struct {
 	Disk      int     `json:"disk"`
 	DiskRead  int     `json:"diskread"`
 	DiskWrite int     `json:"diskwrite"`
-	MaxDisk   int64   `json:"maxdisk"`
-	MaxMem    int64   `json:"maxmem"`
-	Mem       int64   `json:"mem"`
+	MaxDisk   int     `json:"maxdisk"`
+	MaxMem    int     `json:"maxmem"`
+	Mem       int     `json:"mem"`
 	Name      string  `json:"name"`
-	NetIn     int64   `json:"netin"`
-	NetOut    int64   `json:"netout"`
+	NetIn     int     `json:"netin"`
+	NetOut    int     `json:"netout"`
 	Pid       int     `json:"pid"`
 	Status    string  `json:"status"`
 	Uptime    int     `json:"uptime"`
@@ -176,13 +176,13 @@ type GetNodeLxcData struct {
 	Disk      int     `json:"disk"`
 	DiskRead  int     `json:"diskread"`
 	DiskWrite int     `json:"diskwrite"`
-	MaxDisk   int64   `json:"maxdisk"`
-	MaxMem    int64   `json:"maxmem"`
-	MaxSwap   int64   `json:"maxswap"`
-	Mem       int64   `json:"mem"`
+	MaxDisk   int     `json:"maxdisk"`
+	MaxMem    int     `json:"maxmem"`
+	MaxSwap   int     `json:"maxswap"`
+	Mem       int     `json:"mem"`
 	Name      string  `json:"name"`
-	NetIn     int64   `json:"netin"`
-	NetOut    int64   `json:"netout"`
+	NetIn     int     `json:"netin"`
+	NetOut    int     `json:"netout"`
 	Status    string  `json:"status"`
 	Type      string  `json:"type"`
 	Uptime    int     `json:"uptime"`
@@ -221,7 +221,7 @@ type GetNodeDisksListData struct {
 	Model        string `json:"model"`
 	RPM          int    `json:"rpm"`
 	Serial       string `json:"serial"`
-	Size         int64  `json:"size"`
+	Size         int    `json:"size"`
 	Type         string `json:"type"`
 	Used         string `json:"used"`
 	Vendor       string `json:"vendor"`
