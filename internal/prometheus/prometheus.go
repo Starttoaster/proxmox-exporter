@@ -3,6 +3,7 @@ package prometheus
 import (
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/starttoaster/proxmox-exporter/internal/logger"
@@ -176,68 +177,28 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	clusterMem := 0
 	clusterMemAlloc := 0
 
-	// Retrieve node info for each node from statuses
+	// Make waitgroup and results channel for cluster level metrics
+	var wg sync.WaitGroup
+	resultChan := make(chan collectNodeResponse, len(nodes.Data))
+
+	// Collect node metrics from each of the nodes
 	for _, node := range nodes.Data {
-		// Get info for specific node
-		nodeStatus, err := wrappedProxmox.GetNodeStatus(node.Node)
-		if err != nil {
-			logger.Logger.Error(err.Error())
-			return
-		}
+		wg.Add(1)
+		go c.collectNode(ch, node, resultChan, &wg)
+	}
 
-		// Get VM metrics on this node
-		vms, err := wrappedProxmox.GetNodeQemu(node.Node)
-		if err != nil {
-			logger.Logger.Error(err.Error())
-			return
-		}
-		vmMetrics := c.collectVirtualMachineMetrics(ch, node, vms)
+	// Close the result channel after all goroutines finish
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
 
-		// Get lxc data on this node
-		lxcs, err := wrappedProxmox.GetNodeLxc(node.Node)
-		if err != nil {
-			logger.Logger.Error(err.Error())
-			return
-		}
-		lxcMetrics := c.collectLxcMetrics(ch, node, lxcs)
-
-		// Get storage data on this node
-		stores, err := wrappedProxmox.GetNodeStorage(node.Node)
-		if err != nil {
-			logger.Logger.Error(err.Error())
-			return
-		}
-		c.collectStorageMetrics(ch, node, stores)
-
-		// Get disk data on this node
-		disks, err := wrappedProxmox.GetNodeDisksList(node.Node)
-		if err != nil {
-			logger.Logger.Error(err.Error())
-			return
-		}
-		c.collectDiskMetrics(ch, node, disks)
-
-		// Get certificate data on this node
-		certs, err := wrappedProxmox.GetNodeCertificatesInfo(node.Node)
-		if err != nil {
-			logger.Logger.Error(err.Error())
-			return
-		}
-		c.collectCertificateMetrics(ch, node, certs)
-
-		// Collect metrics for this node
-		c.collectNodeUpMetric(ch, node)
-		c.collectNodeVersionMetric(ch, node, nodeStatus.Data)
-		ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeStatus.Data.CPUInfo.Cpus), node.Node)
-		ch <- prometheus.MustNewConstMetric(c.nodeCPUsAlloc, prometheus.GaugeValue, float64(vmMetrics.cpusAllocated+lxcMetrics.cpusAllocated), node.Node)
-		ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(nodeStatus.Data.Memory.Total), node.Node)
-		ch <- prometheus.MustNewConstMetric(c.nodeMemAlloc, prometheus.GaugeValue, float64(vmMetrics.memAllocated+lxcMetrics.memAllocated), node.Node)
-
-		// Iterate on cluster metrics
-		clusterCPUs += nodeStatus.Data.CPUInfo.Cpus
-		clusterCPUsAlloc += vmMetrics.cpusAllocated + lxcMetrics.cpusAllocated
-		clusterMem += nodeStatus.Data.Memory.Total
-		clusterMemAlloc += vmMetrics.memAllocated + lxcMetrics.memAllocated
+	// Collect results from the channel
+	for result := range resultChan {
+		clusterCPUs += result.clusterCPUs
+		clusterCPUsAlloc += result.clusterCPUsAlloc
+		clusterMem += result.clusterMem
+		clusterMemAlloc += result.clusterMemAlloc
 	}
 
 	// Collect cluster metrics
@@ -245,6 +206,82 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(c.clusterCPUsAlloc, prometheus.GaugeValue, float64(clusterCPUsAlloc))
 	ch <- prometheus.MustNewConstMetric(c.clusterMemTotal, prometheus.GaugeValue, float64(clusterMem))
 	ch <- prometheus.MustNewConstMetric(c.clusterMemAlloc, prometheus.GaugeValue, float64(clusterMemAlloc))
+}
+
+// collectNodeResponse is a struct wrapper for all metrics that need to be passed back for control flow,
+// usually for cluster-level metrics
+type collectNodeResponse struct {
+	clusterCPUs      int
+	clusterCPUsAlloc int
+	clusterMem       int
+	clusterMemAlloc  int
+}
+
+func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNodesData, resultChan chan<- collectNodeResponse, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	// Get VM metrics on this node
+	vms, err := wrappedProxmox.GetNodeQemu(node.Node)
+	if err != nil {
+		logger.Logger.Error(err.Error())
+		return
+	}
+	vmMetrics := c.collectVirtualMachineMetrics(ch, node, vms)
+
+	// Get lxc data on this node
+	lxcs, err := wrappedProxmox.GetNodeLxc(node.Node)
+	if err != nil {
+		logger.Logger.Error(err.Error())
+		return
+	}
+	lxcMetrics := c.collectLxcMetrics(ch, node, lxcs)
+
+	// Get storage data on this node
+	stores, err := wrappedProxmox.GetNodeStorage(node.Node)
+	if err != nil {
+		logger.Logger.Error(err.Error())
+		return
+	}
+	c.collectStorageMetrics(ch, node, stores)
+
+	// Get disk data on this node
+	disks, err := wrappedProxmox.GetNodeDisksList(node.Node)
+	if err != nil {
+		logger.Logger.Error(err.Error())
+		return
+	}
+	c.collectDiskMetrics(ch, node, disks)
+
+	// Get certificate data on this node
+	certs, err := wrappedProxmox.GetNodeCertificatesInfo(node.Node)
+	if err != nil {
+		logger.Logger.Error(err.Error())
+		return
+	}
+	c.collectCertificateMetrics(ch, node, certs)
+
+	// Get status on this node
+	nodeStatus, err := wrappedProxmox.GetNodeStatus(node.Node)
+	if err != nil {
+		logger.Logger.Error(err.Error())
+		return
+	}
+
+	// Collect metrics for this node
+	c.collectNodeUpMetric(ch, node)
+	c.collectNodeVersionMetric(ch, node, nodeStatus.Data)
+	ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeStatus.Data.CPUInfo.Cpus), node.Node)
+	ch <- prometheus.MustNewConstMetric(c.nodeCPUsAlloc, prometheus.GaugeValue, float64(vmMetrics.cpusAllocated+lxcMetrics.cpusAllocated), node.Node)
+	ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(nodeStatus.Data.Memory.Total), node.Node)
+	ch <- prometheus.MustNewConstMetric(c.nodeMemAlloc, prometheus.GaugeValue, float64(vmMetrics.memAllocated+lxcMetrics.memAllocated), node.Node)
+
+	// Send the result back to the main function through the channel
+	resultChan <- collectNodeResponse{
+		clusterCPUs:      nodeStatus.Data.CPUInfo.Cpus,
+		clusterCPUsAlloc: vmMetrics.cpusAllocated + lxcMetrics.cpusAllocated,
+		clusterMem:       nodeStatus.Data.Memory.Total,
+		clusterMemAlloc:  vmMetrics.memAllocated + lxcMetrics.memAllocated,
+	}
 }
 
 func (c *Collector) collectNodeVersionMetric(ch chan<- prometheus.Metric, node proxmox.GetNodesData, status proxmox.GetNodeStatusData) {
