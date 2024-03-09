@@ -22,6 +22,8 @@ If you have a feature request, suggestion, or want to see another metric, open u
 
 You will need to know some Proxmox API endpoints (`--proxmox-endpoints`), and have a Proxmox API token that's valid to each of those endpoints (should be true in a cluster.) Your Proxmox API token needs at least the PVEAuditor role. When you create an API token (`--proxmox-token`), it comes with a user identifying string (`--proxmox-token-id`) which is also needed. Lastly, if your API server's TLS cannot be verified, you will need to set `--proxmox-api-insecure=true`.
 
+### Shell
+
 You can pass your configuration with the following CLI flags.
 
 ```bash
@@ -49,13 +51,30 @@ PROXMOX_EXPORTER_PROXMOX_TOKEN_ID="redacted-token-id"
 PROXMOX_EXPORTER_SERVER_PORT=8080
 ```
 
-## Deploy
+### Docker
 
-Documentation and deployment details in progress.
+```bash
+docker run --name proxmox-exporter \
+-p 8080:8080 \
+-e PROXMOX_EXPORTER_LOG_LEVEL='info' \
+-e PROXMOX_EXPORTER_PROXMOX_API_INSECURE='false' \
+-e PROXMOX_EXPORTER_PROXMOX_ENDPOINTS='https://x:8006/,https://y:8006/,https://z:8006/' \
+-e PROXMOX_EXPORTER_PROXMOX_TOKEN='redacted-token' \
+-e PROXMOX_EXPORTER_PROXMOX_TOKEN_ID='redacted-token-id' \
+-e PROXMOX_EXPORTER_SERVER_PORT='8080' \
+ghcr.io/starttoaster/proxmox-exporter:latest
+```
+
+### Helm
+
+There's a helm chart provided in this repository's `chart/proxmox-exporter`. You will need to edit at least the `config` fields in Values.yaml, and optionally `serviceMonitor` fields.
+
+```bash
+helm upgrade --install --create-namespace -n proxmox-exporter proxmox-exporter ./chart/proxmox-exporter
+```
 
 ## TODO
 
-- Add helm chart and deployment documentation
 - Add example grafana dashboard from metrics
 
 ## Metrics
