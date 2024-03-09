@@ -162,3 +162,34 @@ func GetNodeDisksList(name string) (*proxmox.GetNodeDisksListResponse, error) {
 
 	return disks, nil
 }
+
+// GetNodeCertificatesInfo returns the certificates for a node
+func GetNodeCertificatesInfo(name string) (*proxmox.GetNodeCertificatesInfoResponse, error) {
+	// Chech cache
+	var certs *proxmox.GetNodeCertificatesInfoResponse
+	if x, found := cash.Get(fmt.Sprintf("GetNodeCertificatesInfo_%s", name)); found {
+		var ok bool
+		certs, ok = x.(*proxmox.GetNodeCertificatesInfoResponse)
+		if ok {
+			log.Logger.Debug("proxmox request was found in cache for GetNodeCertificatesInfo", "node", name)
+			return certs, nil
+		}
+	}
+
+	// Make request if not found in cache
+	var err error
+	for _, c := range clients {
+		certs, _, err = c.Nodes.GetNodeCertificatesInfo(name)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Update per-node cache since we have it
+	cash.Set(fmt.Sprintf("GetNodeCertificatesInfo_%s", name), certs, cache.DefaultExpiration)
+
+	return certs, nil
+}

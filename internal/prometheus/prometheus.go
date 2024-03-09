@@ -3,6 +3,7 @@ package prometheus
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/starttoaster/proxmox-exporter/internal/logger"
@@ -30,6 +31,9 @@ type Collector struct {
 
 	// Disk
 	diskSmartHealth *prometheus.Desc
+
+	// Certificates
+	daysUntilCertExpiry *prometheus.Desc
 }
 
 // NewCollector constructor function for Collector
@@ -97,6 +101,13 @@ func NewCollector() *Collector {
 			[]string{"node", "devpath"},
 			nil,
 		),
+
+		// Cert metrics
+		daysUntilCertExpiry: prometheus.NewDesc(fqAddPrefix("node_days_until_cert_expiration"),
+			"Number of days until a certificate in PVE expires. Can report 0 days on metric collection errors, check exporter logs.",
+			[]string{"node", "subject"},
+			nil,
+		),
 	}
 }
 
@@ -117,6 +128,12 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.clusterMemAlloc
 	ch <- c.nodeMemTotal
 	ch <- c.nodeMemAlloc
+
+	// Disk metrics
+	ch <- c.diskSmartHealth
+
+	// Cert metrics
+	ch <- c.daysUntilCertExpiry
 }
 
 // Collect instructs the prometheus client how to collect the metrics for each descriptor
@@ -166,6 +183,14 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			return
 		}
 		c.collectDiskMetrics(ch, node, disks)
+
+		// Get certificate data on this node
+		certs, err := wrappedProxmox.GetNodeCertificatesInfo(node.Node)
+		if err != nil {
+			logger.Logger.Error(err.Error())
+			return
+		}
+		c.collectCertificateMetrics(ch, node, certs)
 
 		// Collect metrics for this node
 		c.collectNodeUpMetric(ch, node)
@@ -255,4 +280,25 @@ func (c *Collector) collectDiskMetrics(ch chan<- prometheus.Metric, node proxmox
 		}
 		ch <- prometheus.MustNewConstMetric(c.diskSmartHealth, prometheus.GaugeValue, status, node.Node, disk.DevPath)
 	}
+}
+
+func (c *Collector) collectCertificateMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, certs *proxmox.GetNodeCertificatesInfoResponse) {
+	for _, cert := range certs.Data {
+		// Add days until certificate expiration metric
+		expDays, err := daysUntilUnixTime(cert.NotAfter)
+		if err != nil {
+			// Log error and give 0 days until expiry on metric to report a potential issue
+			logger.Logger.Warn(err.Error(), "notafter", cert.NotAfter, "subject", cert.Subject)
+			ch <- prometheus.MustNewConstMetric(c.daysUntilCertExpiry, prometheus.GaugeValue, 0.0, node.Node, cert.Subject)
+		} else {
+			ch <- prometheus.MustNewConstMetric(c.daysUntilCertExpiry, prometheus.GaugeValue, float64(expDays), node.Node, cert.Subject)
+		}
+	}
+}
+
+func daysUntilUnixTime(notAfter int) (int, error) {
+	currentTime := time.Now().Unix()
+	differenceSeconds := int64(notAfter) - currentTime
+	differenceDays := differenceSeconds / (60 * 60 * 24)
+	return int(differenceDays), nil
 }

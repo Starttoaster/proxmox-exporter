@@ -212,7 +212,7 @@ type GetNodeDisksListResponse struct {
 	Data []GetNodeDisksListData `json:"data"`
 }
 
-// GetNodeDisksListData contains data of one VM from a GetNodeLxc response
+// GetNodeDisksListData contains data of disks from a GetNodeDisksList response
 type GetNodeDisksListData struct {
 	ByIDLink     string `json:"by_id_link"`
 	DevPath      string `json:"devpath"`
@@ -240,6 +240,43 @@ func (s *NodeService) GetNodeDisksList(name string) (*GetNodeDisksListResponse, 
 	}
 
 	d := new(GetNodeDisksListResponse)
+	resp, err := s.client.Do(req, d)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return d, resp, nil
+}
+
+// GetNodeCertificatesInfoResponse contains the response for the /nodes/{node}/disks/list endpoint
+type GetNodeCertificatesInfoResponse struct {
+	Data []GetNodeCertificatesInfoData `json:"data"`
+}
+
+// GetNodeCertificatesInfoData contains data of certificates from a GetNodeCertificatesInfo response
+type GetNodeCertificatesInfoData struct {
+	Filename      string   `json:"filename"`
+	Fingerprint   string   `json:"fingerprint"`
+	Issuer        string   `json:"issuer"`
+	NotAfter      int      `json:"notafter"`
+	NotBefore     int      `json:"notbefore"`
+	Pem           string   `json:"pem"`
+	PublicKeyBits int      `json:"public-key-bits"`
+	PublicKeyType string   `json:"public-key-type"`
+	San           []string `json:"san"`
+	Subject       string   `json:"subject"`
+}
+
+// GetNodeCertificatesInfo makes a GET request to the /nodes/{node}/certificates/info endpoint
+// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/certificates/info
+func (s *NodeService) GetNodeCertificatesInfo(name string) (*GetNodeCertificatesInfoResponse, *http.Response, error) {
+	u := fmt.Sprintf("nodes/%s/certificates/info", name)
+	req, err := s.client.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	d := new(GetNodeCertificatesInfoResponse)
 	resp, err := s.client.Do(req, d)
 	if err != nil {
 		return nil, resp, err
