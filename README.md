@@ -4,15 +4,19 @@ A Prometheus exporter for Proxmox clusters.
 
 ## About
 
-This exporter does client request dispersion, and response caching. If multiple Proxmox cluster API endpoints are provided to this exporter via its configuration, they will be selected to receive API requests at random<sup>1</sup>, and we cache the responses for up to 29 seconds, which should produce fresh metrics if scraped in 30 second intervals, or respond with cache at least half of the time if scraped in 15 second intervals. If you run highly available Prometheus instances that each scrape this exporter, it should only need to make the same set of requests to Proxmox's API one time per 30 second scrape interval.
+This exporter accepts one or multiple Proxmox manager API endpoints to disperse requests between different nodes in your Proxmox cluster at random. In theory this allows you to spread out your API server's compute load across the cluster.
 
-When cache is _not_ used, this exporter makes `1 + (6 * <number of PVE nodes>)` API requests against your cluster to display its metrics. One to list nodes in the PVE cluster, and 6 per-node to reach all of the node specific endpoints this exporter gets its data from. Note that the number of API endpoints (and thus number of requests) may increase as additional types of metrics are added to this exporter.
+It also does API response caching. We cache the responses for up to 29 seconds, which should produce fresh metrics if scraped in 30 second intervals, or respond with cache at least half of the time if scraped in 15 second intervals. If you run highly available Prometheus instances that each scrape this exporter, it should only need to make the same set of requests to Proxmox's API one time per 30 second scrape interval.
 
-When the Proxmox API returns an error response, if multiple API endpoints were given to this exporter's configuration, the request will be retried against one of them randomly<sup>1</sup>. This provides some slack for Proxmox clusters that are in the middle of some temporary maintenance downtime on a node.
+When cache is _not_ used, this exporter makes `1 + (6 * <number of PVE nodes>)` API requests against your cluster to display its metrics. One to list nodes in the PVE cluster, and 6 per-node to reach all of the node specific endpoints this exporter gets its data from.  The number of API endpoints it uses may increase as additional types of metrics are added.
 
-This exporter avoids exporting metrics which are redundant to metrics that may be collected by [node_exporter.](https://github.com/prometheus/node_exporter) Ideally, node_exporter should be ran in tandem with this, on your Proxmox nodes as well as in all of your guests. This exporter could be written to export many of the same metrics from node_exporter, but many of those metrics would be misleading. For example a guest may report back to Proxmox a high percentage usage of its allocated memory, but the majority of its memory usage is actually just cache. Other Proxmox exporters do serve these metrics, though (subjectively) they provide no value. If you have a metric that you would like to collect and export to Prometheus through the Proxmox API, but don't see it here, open an Issue and/or a Pull Request, and we can discuss it there.
+The number of nodes in your cluster shouldn't significantly slow down this exporter's response time, because each set of requests for a node are made concurrently.
 
-<sup>1.</sup> Golang maps are abused for randomness, though they should be sufficient for the relatively light purposes of this exporter.
+When the Proxmox API returns an error response, if multiple API endpoints were given to this exporter's configuration, the request will be retried against one of them randomly. This provides some slack for Proxmox clusters that are in the middle of some temporary maintenance downtime on a node.
+
+We avoid exporting metrics which are redundant to metrics that may be collected by [node_exporter.](https://github.com/prometheus/node_exporter) Ideally, node_exporter should be ran in tandem with this, on your Proxmox nodes as well as in all of your guests.
+
+If you have a feature request, suggestion, or want to see another metric, open up an Issue or a Pull Request and we can discuss it!
 
 ## How to use
 
@@ -51,7 +55,6 @@ Documentation and deployment details in progress.
 
 ## TODO
 
-- All of the individual node API requests requests could easily be made concurrently to help support large clusters
 - Add docker container publish workflow
 - Add helm chart and deployment documentation
 - Add example grafana dashboard from metrics
