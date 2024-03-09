@@ -51,7 +51,6 @@ Documentation and deployment details in progress.
 
 ## TODO
 
-- Add version metric for PVE nodes
 - All of the individual node API requests requests could easily be made concurrently to help support large clusters
 - Add docker container publish workflow
 - Add helm chart and deployment documentation
