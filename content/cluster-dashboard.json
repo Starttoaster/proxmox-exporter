@@ -1214,38 +1214,25 @@
               "uid": "${Datasource}"
             },
             "editorMode": "code",
-            "expr": "sum(proxmox_node_storage_total_bytes) by (storage)",
-            "hide": true,
-            "instant": false,
-            "legendFormat": "Total {{storage}}",
-            "range": true,
-            "refId": "A"
-          },
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "${Datasource}"
-            },
-            "editorMode": "code",
-            "expr": "sum(proxmox_node_storage_used_bytes) by (storage)",
-            "hide": true,
-            "instant": false,
-            "legendFormat": "Used {{storage}}",
-            "range": true,
-            "refId": "B"
-          },
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "${Datasource}"
-            },
-            "editorMode": "code",
-            "expr": "100 * (sum by (storage) (proxmox_node_storage_used_bytes) / sum by (storage) (proxmox_node_storage_total_bytes))",
+            "expr": "100 * (sum by (storage) (proxmox_node_storage_used_bytes{shared=\"true\"}) / sum by (storage) (proxmox_node_storage_total_bytes{shared=\"true\"}))",
             "hide": false,
             "instant": false,
             "legendFormat": "__auto",
             "range": true,
             "refId": "C"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${Datasource}"
+            },
+            "editorMode": "code",
+            "expr": "100 * (sum by (storage,node) (proxmox_node_storage_used_bytes{shared=\"false\"}) / sum by (storage,node) (proxmox_node_storage_total_bytes{shared=\"false\"}))",
+            "hide": false,
+            "instant": false,
+            "legendFormat": "{{node}}/{{storage}}",
+            "range": true,
+            "refId": "A"
           }
         ],
         "title": "Cluster Storage Percentage Utilized",
