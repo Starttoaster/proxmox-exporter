@@ -3,7 +3,6 @@ package prometheus
 import (
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/starttoaster/proxmox-exporter/internal/logger"
@@ -294,11 +293,4 @@ func (c *Collector) collectCertificateMetrics(ch chan<- prometheus.Metric, node 
 			ch <- prometheus.MustNewConstMetric(c.daysUntilCertExpiry, prometheus.GaugeValue, float64(expDays), node.Node, cert.Subject)
 		}
 	}
-}
-
-func daysUntilUnixTime(notAfter int) (int, error) {
-	currentTime := time.Now().Unix()
-	differenceSeconds := int64(notAfter) - currentTime
-	differenceDays := differenceSeconds / (60 * 60 * 24)
-	return int(differenceDays), nil
 }
