@@ -46,6 +46,16 @@ There's a helm chart provided in this repository's `chart/proxmox-exporter`. You
 helm upgrade --install --create-namespace -n proxmox-exporter proxmox-exporter ./chart/proxmox-exporter
 ```
 
+Charts are also published in the releases of this project, which can be installed like this:
+
+```bash
+helm upgrade --install --create-namespace \
+-n proxmox-exporter proxmox-exporter \
+https://github.com/Starttoaster/proxmox-exporter/releases/download/proxmox-exporter-0.1.0/proxmox-exporter-0.1.0.tgz
+```
+
+If installing this way, you can set configuration variables with the `--set` flag.
+
 ### Shell
 
 With Go installed, you can build an executable and run it anywhere. From inside this repo's root directory:
