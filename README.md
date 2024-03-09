@@ -122,9 +122,13 @@ PROXMOX_EXPORTER_PROXMOX_TOKEN_ID="redacted-token-id"
 PROXMOX_EXPORTER_SERVER_PORT=8080
 ```
 
-## TODO
+## Grafana
 
-- Add example grafana dashboard from metrics
+In the content folder of this repository there's an example Grafana dashboard using this exporter. It's exported to JSON so you may import it into your grafana server. 
+
+Simply copy the JSON, and in your grafana instance, in the Dashboards tab, select `New > Import` and then paste the JSON into the `Import via dashboard JSON model` textbox and hit save.
+
+![Cluster dashboard](content/cluster-dashboard.png)
 
 ## Metrics
 
