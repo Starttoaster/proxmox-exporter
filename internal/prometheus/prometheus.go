@@ -13,8 +13,9 @@ import (
 // Collector contains all prometheus metric Descs
 type Collector struct {
 	// Statuses
-	nodeUp  *prometheus.Desc
-	guestUp *prometheus.Desc
+	nodeUp      *prometheus.Desc
+	guestUp     *prometheus.Desc
+	nodeVersion *prometheus.Desc
 
 	// CPU
 	clusterCPUsTotal *prometheus.Desc
@@ -45,12 +46,17 @@ func NewCollector() *Collector {
 		// Status metrics
 		nodeUp: prometheus.NewDesc(fqAddPrefix("node_up"),
 			"Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)",
-			[]string{"type", "name"},
+			[]string{"node"},
 			nil,
 		),
 		guestUp: prometheus.NewDesc(fqAddPrefix("guest_up"),
 			"Shows whether VMs and LXCs in a proxmox cluster are up. (0=down,1=up)",
-			[]string{"type", "name", "vmid", "host"},
+			[]string{"node", "type", "name", "vmid"},
+			nil,
+		),
+		nodeVersion: prometheus.NewDesc(fqAddPrefix("node_version"),
+			"Shows PVE manager node version information",
+			[]string{"node", "version"},
 			nil,
 		),
 
@@ -67,12 +73,12 @@ func NewCollector() *Collector {
 		),
 		nodeCPUsTotal: prometheus.NewDesc(fqAddPrefix("node_cpus_total"),
 			"Total number of vCPU (cores/threads) for a node.",
-			[]string{"name"},
+			[]string{"node"},
 			nil,
 		),
 		nodeCPUsAlloc: prometheus.NewDesc(fqAddPrefix("node_cpus_allocated"),
 			"Total number of vCPU (cores/threads) allocated to guests for a node.",
-			[]string{"name"},
+			[]string{"node"},
 			nil,
 		),
 
@@ -88,13 +94,13 @@ func NewCollector() *Collector {
 			nil,
 		),
 		nodeMemTotal: prometheus.NewDesc(fqAddPrefix("node_memory_total_bytes"),
-			"Total amount of memory in bytes for a nodes.",
-			[]string{"name"},
+			"Total amount of memory in bytes for a node.",
+			[]string{"node"},
 			nil,
 		),
 		nodeMemAlloc: prometheus.NewDesc(fqAddPrefix("node_memory_allocated_bytes"),
 			"Total amount of memory allocated in bytes to guests for a node.",
-			[]string{"name"},
+			[]string{"node"},
 			nil,
 		),
 
@@ -221,6 +227,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 
 		// Collect metrics for this node
 		c.collectNodeUpMetric(ch, node)
+		c.collectNodeVersionMetric(ch, node, nodeStatus.Data)
 		ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeStatus.Data.CPUInfo.Cpus), node.Node)
 		ch <- prometheus.MustNewConstMetric(c.nodeCPUsAlloc, prometheus.GaugeValue, float64(vmMetrics.cpusAllocated+lxcMetrics.cpusAllocated), node.Node)
 		ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(nodeStatus.Data.Memory.Total), node.Node)
@@ -240,12 +247,16 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(c.clusterMemAlloc, prometheus.GaugeValue, float64(clusterMemAlloc))
 }
 
+func (c *Collector) collectNodeVersionMetric(ch chan<- prometheus.Metric, node proxmox.GetNodesData, status proxmox.GetNodeStatusData) {
+	ch <- prometheus.MustNewConstMetric(c.nodeVersion, prometheus.GaugeValue, float64(1), node.Node, status.PveVersion)
+}
+
 func (c *Collector) collectNodeUpMetric(ch chan<- prometheus.Metric, node proxmox.GetNodesData) {
 	status := 0.0
 	if strings.EqualFold(node.Status, "online") {
 		status = 1.0
 	}
-	ch <- prometheus.MustNewConstMetric(c.nodeUp, prometheus.GaugeValue, status, node.Type, node.Node)
+	ch <- prometheus.MustNewConstMetric(c.nodeUp, prometheus.GaugeValue, status, node.Node)
 }
 
 // collectVirtualMachineMetricsResponse is a struct wrapper for all VM metrics that need to be passed back for control flow,
@@ -264,7 +275,7 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, no
 		if strings.EqualFold(vm.Status, "running") {
 			status = 1.0
 		}
-		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, "qemu", vm.Name, strconv.Itoa(vm.VMID), node.Node)
+		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, node.Node, "qemu", vm.Name, strconv.Itoa(vm.VMID))
 
 		// Add to CPU allocated to VMs on this node metric
 		res.cpusAllocated += vm.Cpus
@@ -289,7 +300,7 @@ func (c *Collector) collectLxcMetrics(ch chan<- prometheus.Metric, node proxmox.
 		if strings.EqualFold(lxc.Status, "running") {
 			status = 1.0
 		}
-		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, lxc.Type, lxc.Name, lxc.VMID, node.Node)
+		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, node.Node, lxc.Type, lxc.Name, lxc.VMID)
 
 		// Add to CPU allocated to LXCs on this node metric
 		res.cpusAllocated += lxc.Cpus
