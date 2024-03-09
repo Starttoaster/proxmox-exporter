@@ -28,6 +28,10 @@ type Collector struct {
 	nodeMemTotal    *prometheus.Desc
 	nodeMemAlloc    *prometheus.Desc
 
+	// Storage
+	storageTotal *prometheus.Desc
+	storageUsed  *prometheus.Desc
+
 	// Disk
 	diskSmartHealth *prometheus.Desc
 
@@ -95,6 +99,18 @@ func NewCollector() *Collector {
 		),
 
 		// Disk metrics
+		storageTotal: prometheus.NewDesc(fqAddPrefix("node_storage_total_bytes"),
+			"Total amount of storage available in a volume on a node by storage type.",
+			[]string{"node", "storage", "type"},
+			nil,
+		),
+		storageUsed: prometheus.NewDesc(fqAddPrefix("node_storage_used_bytes"),
+			"Total amount of storage used in a volume on a node by storage type.",
+			[]string{"node", "storage", "type"},
+			nil,
+		),
+
+		// Disk metrics
 		diskSmartHealth: prometheus.NewDesc(fqAddPrefix("node_disk_smart_status"),
 			"Disk SMART health status. (0=FAIL/Unknown,1=PASSED)",
 			[]string{"node", "devpath"},
@@ -127,6 +143,10 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.clusterMemAlloc
 	ch <- c.nodeMemTotal
 	ch <- c.nodeMemAlloc
+
+	// Storage metrics
+	ch <- c.storageTotal
+	ch <- c.storageUsed
 
 	// Disk metrics
 	ch <- c.diskSmartHealth
@@ -174,6 +194,14 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 			return
 		}
 		lxcMetrics := c.collectLxcMetrics(ch, node, lxcs)
+
+		// Get storage data on this node
+		stores, err := wrappedProxmox.GetNodeStorage(node.Node)
+		if err != nil {
+			logger.Logger.Error(err.Error())
+			return
+		}
+		c.collectStorageMetrics(ch, node, stores)
 
 		// Get disk data on this node
 		disks, err := wrappedProxmox.GetNodeDisksList(node.Node)
@@ -292,5 +320,12 @@ func (c *Collector) collectCertificateMetrics(ch chan<- prometheus.Metric, node 
 		} else {
 			ch <- prometheus.MustNewConstMetric(c.daysUntilCertExpiry, prometheus.GaugeValue, float64(expDays), node.Node, cert.Subject)
 		}
+	}
+}
+
+func (c *Collector) collectStorageMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, storages *proxmox.GetNodeStorageResponse) {
+	for _, storage := range storages.Data {
+		ch <- prometheus.MustNewConstMetric(c.storageTotal, prometheus.GaugeValue, float64(storage.Total), node.Node, storage.Storage, storage.Type)
+		ch <- prometheus.MustNewConstMetric(c.storageUsed, prometheus.GaugeValue, float64(storage.Used), node.Node, storage.Storage, storage.Type)
 	}
 }

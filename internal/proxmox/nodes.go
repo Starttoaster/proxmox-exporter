@@ -193,3 +193,34 @@ func GetNodeCertificatesInfo(name string) (*proxmox.GetNodeCertificatesInfoRespo
 
 	return certs, nil
 }
+
+// GetNodeStorage returns the storage for a node
+func GetNodeStorage(name string) (*proxmox.GetNodeStorageResponse, error) {
+	// Chech cache
+	var store *proxmox.GetNodeStorageResponse
+	if x, found := cash.Get(fmt.Sprintf("GetNodeStorage_%s", name)); found {
+		var ok bool
+		store, ok = x.(*proxmox.GetNodeStorageResponse)
+		if ok {
+			log.Logger.Debug("proxmox request was found in cache for GetNodeStorage", "node", name)
+			return store, nil
+		}
+	}
+
+	// Make request if not found in cache
+	var err error
+	for _, c := range clients {
+		store, _, err = c.Nodes.GetNodeStorage(name)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Update per-node cache since we have it
+	cash.Set(fmt.Sprintf("GetNodeStorage_%s", name), store, cache.DefaultExpiration)
+
+	return store, nil
+}

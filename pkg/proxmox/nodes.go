@@ -284,3 +284,40 @@ func (s *NodeService) GetNodeCertificatesInfo(name string) (*GetNodeCertificates
 
 	return d, resp, nil
 }
+
+// GetNodeStorageResponse contains the response for the /nodes/{node}/storage endpoint
+type GetNodeStorageResponse struct {
+	Data []GetNodeStorageData `json:"data"`
+}
+
+// GetNodeStorageData contains data of certificates from a GetNodeStorage response
+type GetNodeStorageData struct {
+	Active       int     `json:"active"`
+	Avail        int     `json:"avail"`
+	Content      string  `json:"content"`
+	Enabled      int     `json:"enabled"`
+	Shared       int     `json:"shared"`
+	Storage      string  `json:"storage"`
+	Total        int     `json:"total"`
+	Type         string  `json:"type"`
+	Used         int     `json:"used"`
+	UsedFraction float64 `json:"used_fraction"`
+}
+
+// GetNodeStorage makes a GET request to the /nodes/{node}/storage endpoint
+// https://pve.proxmox.com/pve-docs/api-viewer/index.html#/nodes/{node}/storage
+func (s *NodeService) GetNodeStorage(name string) (*GetNodeStorageResponse, *http.Response, error) {
+	u := fmt.Sprintf("nodes/%s/storage", name)
+	req, err := s.client.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	d := new(GetNodeStorageResponse)
+	resp, err := s.client.Do(req, d)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return d, resp, nil
+}
