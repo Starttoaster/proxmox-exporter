@@ -27,4 +27,4 @@ jobs:
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         with:
-          charts_dir: ./chart/proxmox-exporter
+          charts_dir: ./chart
