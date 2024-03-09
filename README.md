@@ -2,6 +2,15 @@
 
 A Prometheus exporter for Proxmox clusters.
 
+- [About](#about)
+- [Usage](#usage)
+  - [Docker](#docker)
+  - [Helm](#helm)
+  - [Shell](#shell)
+- [Grafana](#grafana)
+- [Alerting](#alerting)
+- [License](#license)
+
 ## About
 
 This exporter accepts one or multiple Proxmox manager API endpoints to disperse requests between different nodes in your Proxmox cluster at random. In theory this allows you to spread out your API server's compute load across the cluster.
@@ -18,7 +27,7 @@ We avoid exporting metrics which are redundant to metrics that may be collected 
 
 If you have a feature request, suggestion, or want to see another metric, open up an Issue or a Pull Request and we can discuss it!
 
-## How to use
+## Usage
 
 You will need to know some Proxmox API endpoints (`--proxmox-endpoints`), and have a Proxmox API token that's valid to each of those endpoints (should be true in a cluster.) Your Proxmox API token needs at least the PVEAuditor role. When you create an API token (`--proxmox-token`), it comes with a user identifying string (`--proxmox-token-id`) which is also needed. Lastly, if your API server's TLS cannot be verified, you will need to set `--proxmox-api-insecure=true`.
 
@@ -129,6 +138,12 @@ In the content folder of this repository there's an example Grafana dashboard us
 Simply copy the JSON, and in your grafana instance, in the Dashboards tab, select `New > Import` and then paste the JSON into the `Import via dashboard JSON model` textbox and hit save.
 
 ![Cluster dashboard](content/cluster-dashboard.png)
+
+A Grafana dashboard that implements this exporter with metrics from node_exporter is also in the works. Contributions are welcome for this as well.
+
+## Alerting
+
+Some Prometheus alert rules that use metrics from this exporter are in the works. Contributions are welcome for this as well.
 
 ## Metrics
 
@@ -246,3 +261,27 @@ proxmox_node_version{node="proxmox1",version="pve-manager/8.1.4/ec5affc9e41f1d79
 proxmox_node_version{node="proxmox2",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 proxmox_node_version{node="proxmox3",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 ```
+
+## License
+
+MIT License
+
+Copyright (c) 2024 Brandon Butler
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
