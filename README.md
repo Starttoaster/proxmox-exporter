@@ -4,9 +4,9 @@ A Prometheus exporter for Proxmox clusters.
 
 ## About
 
-This exporter does client request dispersion, and response cacheing. If multiple Proxmox cluster API endpoints are provided to this exporter via its configuration, they will be selected to receive API requests at random<sup>1</sup>, and we cache the responses for up to 29 seconds, which should produce fresh metrics if scraped in 30 second intervals, or respond with cache at least half of the time if scraped in 15 second intervals. If you run highly available Prometheus instances that each scrape this exporter, it should only need to make the same set of requests to Proxmox's API one time per 30 second scrape interval.
+This exporter does client request dispersion, and response caching. If multiple Proxmox cluster API endpoints are provided to this exporter via its configuration, they will be selected to receive API requests at random<sup>1</sup>, and we cache the responses for up to 29 seconds, which should produce fresh metrics if scraped in 30 second intervals, or respond with cache at least half of the time if scraped in 15 second intervals. If you run highly available Prometheus instances that each scrape this exporter, it should only need to make the same set of requests to Proxmox's API one time per 30 second scrape interval.
 
-When cache is _not_ used, this exporter makes `1 + (6 * <number of PVE nodes>)` API requests against your cluster to display its metrics. One to list nodes in the PVE cluster, and 5 per-node to reach all of the node specific endpoints this exporter gets its data from. Note that the number of API endpoints (and thus number of requests) may increase as additional types of metrics are added to this exporter.
+When cache is _not_ used, this exporter makes `1 + (6 * <number of PVE nodes>)` API requests against your cluster to display its metrics. One to list nodes in the PVE cluster, and 6 per-node to reach all of the node specific endpoints this exporter gets its data from. Note that the number of API endpoints (and thus number of requests) may increase as additional types of metrics are added to this exporter.
 
 When the Proxmox API returns an error response, if multiple API endpoints were given to this exporter's configuration, the request will be retried against one of them randomly<sup>1</sup>. This provides some slack for Proxmox clusters that are in the middle of some temporary maintenance downtime on a node.
 
@@ -51,9 +51,11 @@ Documentation and deployment details in progress.
 
 ## TODO
 
-- Many of these requests could be made concurrently to help support large clusters
-- Add helm chart
-- Finish documentation
+- Add version metric for PVE nodes
+- All of the individual node API requests requests could easily be made concurrently to help support large clusters
+- Add docker container publish workflow
+- Add helm chart and deployment documentation
+- Add example grafana dashboard from metrics
 
 ## Metrics
 
