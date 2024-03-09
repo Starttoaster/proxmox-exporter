@@ -108,12 +108,12 @@ func NewCollector() *Collector {
 		// Disk metrics
 		storageTotal: prometheus.NewDesc(fqAddPrefix("node_storage_total_bytes"),
 			"Total amount of storage available in a volume on a node by storage type.",
-			[]string{"node", "storage", "type"},
+			[]string{"node", "storage", "type", "shared"},
 			nil,
 		),
 		storageUsed: prometheus.NewDesc(fqAddPrefix("node_storage_used_bytes"),
 			"Total amount of storage used in a volume on a node by storage type.",
-			[]string{"node", "storage", "type"},
+			[]string{"node", "storage", "type", "shared"},
 			nil,
 		),
 
@@ -373,7 +373,13 @@ func (c *Collector) collectCertificateMetrics(ch chan<- prometheus.Metric, node 
 
 func (c *Collector) collectStorageMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, storages *proxmox.GetNodeStorageResponse) {
 	for _, storage := range storages.Data {
-		ch <- prometheus.MustNewConstMetric(c.storageTotal, prometheus.GaugeValue, float64(storage.Total), node.Node, storage.Storage, storage.Type)
-		ch <- prometheus.MustNewConstMetric(c.storageUsed, prometheus.GaugeValue, float64(storage.Used), node.Node, storage.Storage, storage.Type)
+		// Creates a boolean label string for the PVE storage volume that tells whether the volume is shared in a cluster
+		shared := "false"
+		if storage.Shared == 1 {
+			shared = "true"
+		}
+
+		ch <- prometheus.MustNewConstMetric(c.storageTotal, prometheus.GaugeValue, float64(storage.Total), node.Node, storage.Storage, storage.Type, shared)
+		ch <- prometheus.MustNewConstMetric(c.storageUsed, prometheus.GaugeValue, float64(storage.Used), node.Node, storage.Storage, storage.Type, shared)
 	}
 }
