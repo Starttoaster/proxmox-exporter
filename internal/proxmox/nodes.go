@@ -39,7 +39,7 @@ func GetNodes() (*proxmox.GetNodesResponse, error) {
 	return nodes, nil
 }
 
-// GetNodStatus returns a proxmox Node object or an error from the /nodes/%s/status endpoint
+// GetNodeStatus returns a proxmox Node object or an error from the /nodes/%s/status endpoint
 func GetNodeStatus(name string) (*proxmox.GetNodeStatusResponse, error) {
 	// Chech cache
 	var node *proxmox.GetNodeStatusResponse
