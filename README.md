@@ -165,4 +165,10 @@ proxmox_node_storage_used_bytes{node="proxmox3",storage="pool1",type="rbd"} 6.83
 proxmox_node_up{name="proxmox1",type="node"} 1
 proxmox_node_up{name="proxmox2",type="node"} 1
 proxmox_node_up{name="proxmox3",type="node"} 1
+
+# HELP proxmox_node_version Shows PVE manager node version information
+# TYPE proxmox_node_version gauge
+proxmox_node_version{node="proxmox1",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
+proxmox_node_version{node="proxmox2",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
+proxmox_node_version{node="proxmox3",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 ```
