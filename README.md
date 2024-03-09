@@ -122,10 +122,6 @@ PROXMOX_EXPORTER_PROXMOX_TOKEN_ID="redacted-token-id"
 PROXMOX_EXPORTER_SERVER_PORT=8080
 ```
 
-## TODO
-
-- Add example grafana dashboard from metrics
-
 ## Metrics
 
 A list of metrics this exports is below. Newlines between metrics were added for readability.
@@ -242,3 +238,9 @@ proxmox_node_version{node="proxmox1",version="pve-manager/8.1.4/ec5affc9e41f1d79
 proxmox_node_version{node="proxmox2",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 proxmox_node_version{node="proxmox3",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 ```
+
+## Grafana
+
+In the content folder of this repository there's an example Grafana dashboard, exported to JSON that you can import into your grafana server. Simply copy the JSON, and in your grafana instance, in the Dashboards tab, select `New > Import` and then paste the JSON into the `Import via dashboard JSON model` textbox.
+
+![Cluster dashboard](content/cluster-dashboard.png)
