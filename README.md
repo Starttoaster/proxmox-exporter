@@ -40,25 +40,51 @@ ghcr.io/starttoaster/proxmox-exporter:latest
 
 ### Helm
 
-There's a helm chart provided in this repository's `chart/proxmox-exporter`. You will need to edit at least the `config` fields in Values.yaml, and optionally `serviceMonitor` fields.
+This repository publishes a helm chart. It's located this repo's `chart` directory. In its values file, you'll need to edit the fields under `configuration`, and optionally the `serviceMonitor` fields.
 
-```bash
-helm upgrade --install --create-namespace -n proxmox-exporter proxmox-exporter ./chart/proxmox-exporter
+Create your own file named `values.yaml` and edit the following:
+
+```yaml
+config:
+  # required: Set to your actual API server URL(s). Can be one, or multiple separated by commas
+  # Ex: https://x:8006/,https://y:8006/,https://z:8006/
+  endpoints: ''
+
+  # required: A Proxmox API token and token-ID. Needs to have at least the PVEAuditor role
+  token: ''
+  tokenID: ''
+
+  # optional: Set to 'true' if the API server's TLS can not be verified
+  api_insecure: 'false'
+
+  # optional: Set to 'debug' for more logs
+  log_level: 'info'
+
+  # optional: If you change this, change the service.port value too
+  port: '8080'
+
+# optional
+serviceMonitor:
+  enabled: false
+  ## The label to use to retrieve the job name from.
+  ## jobLabel: "app.kubernetes.io/name"
+  additionalLabels: {}
+  annotations: {}
+  targetLabels: []
+  relabelings: []
+  metricRelabelings: []
 ```
 
-Charts are also published in the releases of this project, which can be installed like this:
+Install the chart:
 
 ```bash
-# Add the repo
-helm repo add proxmox-exporter https://starttoaster.github.io/proxmox-exporter
-
-# Install the chart
 helm upgrade --install --create-namespace \
--n proxmox-exporter proxmox-exporter \
-proxmox-exporter/proxmox-exporter
+--repo "https://starttoaster.github.io/proxmox-exporter" 
+-n proxmox-exporter \
+--values ./values.yaml \
+proxmox-exporter \
+proxmox-exporter
 ```
-
-If installing this way, you can set configuration variables with the `--set` flag.
 
 ### Shell
 
