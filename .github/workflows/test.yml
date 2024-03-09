@@ -1,0 +1,54 @@
+name: Test/Lint/Fmt/Vet
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: golang:1
+    env:
+      GOFLAGS: "-buildvcs=false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: go build -o /dev/null ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Check gofmt changes
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Check local formatting with gofmt, the following files have formatting deviations:"
+            gofmt -s -l .
+            exit 1 
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Verify Go modules
+        run: |
+          go mod download
+          go mod verify
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck -test ./...
+
+      - name: Run errcheck
+        run: |
+          go install github.com/kisielk/errcheck@latest
+          errcheck ./...
+
+      - name: Run staticcheck
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./...
+
+      - name: Run golint
+        run: |
+          go install golang.org/x/lint/golint@latest
+          golint -set_exit_status ./...
