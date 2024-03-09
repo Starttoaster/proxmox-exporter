@@ -22,7 +22,38 @@ If you have a feature request, suggestion, or want to see another metric, open u
 
 You will need to know some Proxmox API endpoints (`--proxmox-endpoints`), and have a Proxmox API token that's valid to each of those endpoints (should be true in a cluster.) Your Proxmox API token needs at least the PVEAuditor role. When you create an API token (`--proxmox-token`), it comes with a user identifying string (`--proxmox-token-id`) which is also needed. Lastly, if your API server's TLS cannot be verified, you will need to set `--proxmox-api-insecure=true`.
 
+### Docker
+
+You can run proxmox-exporter in docker. You will need to set at minimum the `PROXMOX_EXPORTER_PROXMOX_ENDPOINTS`, `PROXMOX_EXPORTER_PROXMOX_TOKEN`, and `PROXMOX_EXPORTER_PROXMOX_TOKEN_ID` fields. You can also set `PROXMOX_EXPORTER_PROXMOX_API_INSECURE` to `true` to allow insecure connections to the API server(s). You can set `PROXMOX_EXPORTER_LOG_LEVEL` to `debug` to get more verbose logging.
+
+```bash
+docker run --name proxmox-exporter \
+-p 8080:8080 \
+-e PROXMOX_EXPORTER_LOG_LEVEL='info' \
+-e PROXMOX_EXPORTER_PROXMOX_API_INSECURE='false' \
+-e PROXMOX_EXPORTER_PROXMOX_ENDPOINTS='https://x:8006/,https://y:8006/,https://z:8006/' \
+-e PROXMOX_EXPORTER_PROXMOX_TOKEN='redacted-token' \
+-e PROXMOX_EXPORTER_PROXMOX_TOKEN_ID='redacted-token-id' \
+-e PROXMOX_EXPORTER_SERVER_PORT='8080' \
+ghcr.io/starttoaster/proxmox-exporter:latest
+```
+
+### Helm
+
+There's a helm chart provided in this repository's `chart/proxmox-exporter`. You will need to edit at least the `config` fields in Values.yaml, and optionally `serviceMonitor` fields.
+
+```bash
+helm upgrade --install --create-namespace -n proxmox-exporter proxmox-exporter ./chart/proxmox-exporter
+```
+
 ### Shell
+
+With Go installed, you can build an executable and run it anywhere. From inside this repo's root directory:
+
+```bash
+go build
+./proxmox-exporter [...configuration]
+```
 
 You can pass your configuration with the following CLI flags.
 
@@ -49,28 +80,6 @@ PROXMOX_EXPORTER_PROXMOX_ENDPOINTS="https://x:8006/,https://y:8006/,https://z:80
 PROXMOX_EXPORTER_PROXMOX_TOKEN="redacted-token"
 PROXMOX_EXPORTER_PROXMOX_TOKEN_ID="redacted-token-id"
 PROXMOX_EXPORTER_SERVER_PORT=8080
-```
-
-### Docker
-
-```bash
-docker run --name proxmox-exporter \
--p 8080:8080 \
--e PROXMOX_EXPORTER_LOG_LEVEL='info' \
--e PROXMOX_EXPORTER_PROXMOX_API_INSECURE='false' \
--e PROXMOX_EXPORTER_PROXMOX_ENDPOINTS='https://x:8006/,https://y:8006/,https://z:8006/' \
--e PROXMOX_EXPORTER_PROXMOX_TOKEN='redacted-token' \
--e PROXMOX_EXPORTER_PROXMOX_TOKEN_ID='redacted-token-id' \
--e PROXMOX_EXPORTER_SERVER_PORT='8080' \
-ghcr.io/starttoaster/proxmox-exporter:latest
-```
-
-### Helm
-
-There's a helm chart provided in this repository's `chart/proxmox-exporter`. You will need to edit at least the `config` fields in Values.yaml, and optionally `serviceMonitor` fields.
-
-```bash
-helm upgrade --install --create-namespace -n proxmox-exporter proxmox-exporter ./chart/proxmox-exporter
 ```
 
 ## TODO
