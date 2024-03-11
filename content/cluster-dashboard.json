@@ -55,9 +55,12 @@
       "id": 1,
       "options": {
         "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value"
+          ]
         },
         "pieType": "pie",
         "reduceOptions": {
@@ -817,6 +820,7 @@
             }
           },
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -922,6 +926,7 @@
             }
           },
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1418,7 +1423,7 @@
       "type": "table"
     }
   ],
-  "refresh": "",
+  "refresh": "1m",
   "schemaVersion": 39,
   "tags": [],
   "templating": {
@@ -1451,6 +1456,6 @@
   "timezone": "browser",
   "title": "Proxmox",
   "uid": "cdf649p58atj4d",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
