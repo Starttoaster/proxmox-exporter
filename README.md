@@ -72,7 +72,7 @@ config:
   # optional: If you change this, change the service.port value too
   port: '8080'
 
-# optional
+# optional: creates a ServiceMonitor that targets this exporter's service -- for use with the kube-prometheus operator
 serviceMonitor:
   enabled: false
   ## The label to use to retrieve the job name from.
@@ -82,6 +82,10 @@ serviceMonitor:
   targetLabels: []
   relabelings: []
   metricRelabelings: []
+
+# optional: creates a PrometheusRule with some basic alerts for proxmox clusters -- for use with the kube-prometheus operator
+prometheusRule:
+  enabled: false
 ```
 
 Install the chart:
@@ -143,7 +147,7 @@ A Grafana dashboard that implements this exporter with metrics from node_exporte
 
 ## Alerting
 
-Some Prometheus alert rules that use metrics from this exporter are in the works. Contributions are welcome for this as well.
+The Helm chart in this repository comes with some Prometheus rules for PVE servers. More alerts are being added to it over time. Find that in the `chart/proxmox-exporter/templates` directory.
 
 ## Metrics
 
