@@ -11,7 +11,7 @@ spec:
       rules:
         - alert: ProxmoxNodeDown
           annotations:
-            title: Proxmox node {{ $labels.node }} is down
+            title: Proxmox node {{ printf "{{ $labels.node }}" }} is down
           expr: |
             proxmox_node_up == 0
           for: 1m
@@ -19,7 +19,7 @@ spec:
             severity: critical
         - alert: ProxmoxNodeTargetLost
           annotations:
-            title: Proxmox node up metric absent for {{ $labels.node }}
+            title: Proxmox node up metric absent for {{ printf "{{ $labels.node }}" }}
             description: Something wrong with the exporter, the Proxmox API server(s) it is configured to make requests to, or the server the exporter is running on
           expr: |
             absent_over_time(proxmox_node_up[1h])
@@ -28,8 +28,8 @@ spec:
             severity: critical
         - alert: ProxmoxGuestDown
           annotations:
-            title: Proxmox guest {{ $labels.name }} is down
-            description: Guest {{ $labels.name }} of type {{ $labels.type }} on node {{ $labels.node }} is down
+            title: Proxmox guest {{ printf "{{ $labels.name }}" }} is down
+            description: Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is down
           expr: |
             proxmox_guest_up == 0
           for: 1m
@@ -37,8 +37,8 @@ spec:
             severity: critical
         - alert: ProxmoxGuestTargetLost
           annotations:
-            title: Proxmox guest up metric absent for {{ $labels.name }}
-            description:  Guest {{ $labels.name }} of type {{ $labels.type }} on node {{ $labels.node }} may be down
+            title: Proxmox guest up metric absent for {{ printf "{{ $labels.name }}" }}
+            description:  Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} may be down
           expr: |
             absent_over_time(proxmox_guest_up[1h])
           for: 1m
