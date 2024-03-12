@@ -40,92 +40,100 @@ type Collector struct {
 
 // NewCollector constructor function for Collector
 func NewCollector() *Collector {
+	// Initialize constant labels for timeseries this exporter makes
+	var constLabels prometheus.Labels = make(prometheus.Labels)
+
+	// Add cluster label if the API package found a cluster name
+	if wrappedProxmox.ClusterName != "" {
+		constLabels["cluster"] = wrappedProxmox.ClusterName
+	}
+
 	return &Collector{
 		// Status metrics
 		nodeUp: prometheus.NewDesc(fqAddPrefix("node_up"),
 			"Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)",
 			[]string{"node"},
-			nil,
+			constLabels,
 		),
 		guestUp: prometheus.NewDesc(fqAddPrefix("guest_up"),
 			"Shows whether VMs and LXCs in a proxmox cluster are up. (0=down,1=up)",
 			[]string{"node", "type", "name", "vmid"},
-			nil,
+			constLabels,
 		),
 		nodeVersion: prometheus.NewDesc(fqAddPrefix("node_version"),
 			"Shows PVE manager node version information",
 			[]string{"node", "version"},
-			nil,
+			constLabels,
 		),
 
 		// CPU metrics
 		clusterCPUsTotal: prometheus.NewDesc(fqAddPrefix("cluster_cpus_total"),
 			"Total number of vCPU (cores/threads) for a cluster.",
 			nil,
-			nil,
+			constLabels,
 		),
 		clusterCPUsAlloc: prometheus.NewDesc(fqAddPrefix("cluster_cpus_allocated"),
 			"Total number of vCPU (cores/threads) allocated to guests for a cluster.",
 			nil,
-			nil,
+			constLabels,
 		),
 		nodeCPUsTotal: prometheus.NewDesc(fqAddPrefix("node_cpus_total"),
 			"Total number of vCPU (cores/threads) for a node.",
 			[]string{"node"},
-			nil,
+			constLabels,
 		),
 		nodeCPUsAlloc: prometheus.NewDesc(fqAddPrefix("node_cpus_allocated"),
 			"Total number of vCPU (cores/threads) allocated to guests for a node.",
 			[]string{"node"},
-			nil,
+			constLabels,
 		),
 
 		// Mem metrics
 		clusterMemTotal: prometheus.NewDesc(fqAddPrefix("cluster_memory_total_bytes"),
 			"Total amount of memory in bytes for a cluster.",
 			nil,
-			nil,
+			constLabels,
 		),
 		clusterMemAlloc: prometheus.NewDesc(fqAddPrefix("cluster_memory_allocated_bytes"),
 			"Total amount of memory allocated in bytes to guests for a cluster.",
 			nil,
-			nil,
+			constLabels,
 		),
 		nodeMemTotal: prometheus.NewDesc(fqAddPrefix("node_memory_total_bytes"),
 			"Total amount of memory in bytes for a node.",
 			[]string{"node"},
-			nil,
+			constLabels,
 		),
 		nodeMemAlloc: prometheus.NewDesc(fqAddPrefix("node_memory_allocated_bytes"),
 			"Total amount of memory allocated in bytes to guests for a node.",
 			[]string{"node"},
-			nil,
+			constLabels,
 		),
 
 		// Disk metrics
 		storageTotal: prometheus.NewDesc(fqAddPrefix("node_storage_total_bytes"),
 			"Total amount of storage available in a volume on a node by storage type.",
 			[]string{"node", "storage", "type", "shared"},
-			nil,
+			constLabels,
 		),
 		storageUsed: prometheus.NewDesc(fqAddPrefix("node_storage_used_bytes"),
 			"Total amount of storage used in a volume on a node by storage type.",
 			[]string{"node", "storage", "type", "shared"},
-			nil,
+			constLabels,
 		),
 
 		// Disk metrics
 		diskSmartHealth: prometheus.NewDesc(fqAddPrefix("node_disk_smart_status"),
 			"Disk SMART health status. (0=FAIL/Unknown,1=PASSED)",
 			[]string{"node", "devpath"},
-			nil,
+			constLabels,
 		),
 
 		// Cert metrics
 		daysUntilCertExpiry: prometheus.NewDesc(fqAddPrefix("node_days_until_cert_expiration"),
 			"Number of days until a certificate in PVE expires. Can report 0 days on metric collection errors, check exporter logs.",
 			[]string{"node", "subject"},
-			nil,
+			constLabels,
 		),
 	}
 }

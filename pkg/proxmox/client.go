@@ -28,7 +28,8 @@ type Client struct {
 	token string
 
 	// Services for each resource in the Proxmox API
-	Nodes *NodeService
+	Nodes   *NodeService
+	Cluster *ClusterService
 }
 
 // NewClient returns a new Proxmox API client
@@ -58,6 +59,7 @@ func NewClient(tokenID string, token string, options ...ClientOptionFunc) (*Clie
 
 	// Create all the Proxmox API services
 	c.Nodes = &NodeService{client: c}
+	c.Cluster = &ClusterService{client: c}
 
 	return c, nil
 }
