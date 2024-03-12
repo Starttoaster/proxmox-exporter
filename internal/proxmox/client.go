@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -14,6 +15,9 @@ import (
 )
 
 var (
+	// ClusterName gets populated with the proxmox cluster's cluster name on clustered PVE instances
+	ClusterName string
+
 	clients map[string]*proxmox.Client
 	cash    *cache.Cache
 )
@@ -63,5 +67,31 @@ func Init(endpoints []string, tokenID, token string, tlsVerify bool) error {
 	// TODO should cache lifespan and cache expiration intervals be user configurable?
 	cash = cache.New(24*time.Second, 5*time.Second)
 
+	retrieveClusterName()
+
 	return nil
+}
+
+func retrieveClusterName() {
+	// Retrieve cluster status -- if clustered
+	clusterStatus, err := GetClusterStatus()
+	if err != nil {
+		return
+	}
+
+	// Exit if no data returned
+	if len(clusterStatus.Data) == 0 {
+		return
+	}
+
+	// Parse out cluster name
+	for _, cluster := range clusterStatus.Data {
+		if strings.EqualFold(cluster.Type, "cluster") {
+			ClusterName = cluster.Name
+			break
+		}
+	}
+	if ClusterName != "" {
+		log.Logger.Info("discovered PVE cluster", "cluster", ClusterName)
+	}
 }

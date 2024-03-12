@@ -17,7 +17,7 @@ This exporter accepts one or multiple Proxmox manager API endpoints to disperse 
 
 It also does API response caching. We cache the responses for up to 29 seconds, which should produce fresh metrics if scraped in 30 second intervals, or respond with cache at least half of the time if scraped in 15 second intervals. If you run highly available Prometheus instances that each scrape this exporter, it should only need to make the same set of requests to Proxmox's API one time per 30 second scrape interval.
 
-When cache is _not_ used, this exporter makes `1 + (6 * <number of PVE nodes>)` API requests against your cluster to display its metrics. One to list nodes in the PVE cluster, and 6 per-node to reach all of the node specific endpoints this exporter gets its data from.  The number of API endpoints it uses may increase as additional types of metrics are added.
+When cache is _not_ used, this exporter makes `1 + (6 * <number of PVE nodes>)` API requests against your cluster to display its metrics. One to list nodes in the PVE cluster, and 6 per-node to reach all of the node specific endpoints this exporter gets its data from.  The number of API endpoints it uses may increase as additional types of metrics are added. One additional request is made on this exporter's start up, to retrieve the name of a Proxmox cluster for your timeseries labels, if it's a clustered PVE setup, but the exporter has no need to reload this endpoint over time.
 
 The number of nodes in your cluster shouldn't significantly slow down this exporter's response time, because each set of requests for a node are made concurrently.
 
