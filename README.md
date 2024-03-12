@@ -1,6 +1,6 @@
 # Proxmox Exporter
 
-A Prometheus exporter for Proxmox clusters.
+A Prometheus exporter for individual PVE hosts or clusters. This is tested againsts PVE 8.x systems. Earlier Proxmox versions will be EOL soon, but in future major updates I'll try to keep the exporter metrics backwards compatible.
 
 - [About](#about)
 - [Usage](#usage)
@@ -9,6 +9,8 @@ A Prometheus exporter for Proxmox clusters.
   - [Shell](#shell)
 - [Grafana](#grafana)
 - [Alerting](#alerting)
+- [Metrics](#metrics)
+- [Make an API Token](#make-an-api-token)
 - [License](#license)
 
 ## About
@@ -30,6 +32,8 @@ If you have a feature request, suggestion, or want to see another metric, open u
 ## Usage
 
 You will need to know some Proxmox API endpoints (`--proxmox-endpoints`), and have a Proxmox API token that's valid to each of those endpoints (should be true in a cluster.) Your Proxmox API token needs at least the PVEAuditor role. When you create an API token (`--proxmox-token`), it comes with a user identifying string (`--proxmox-token-id`) which is also needed. Lastly, if your API server's TLS cannot be verified, you will need to set `--proxmox-api-insecure=true`.
+
+For help making an API token, see [Make an API Token](#make-an-api-token).
 
 ### Docker
 
@@ -265,6 +269,19 @@ proxmox_node_version{node="proxmox1",version="pve-manager/8.1.4/ec5affc9e41f1d79
 proxmox_node_version{node="proxmox2",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 proxmox_node_version{node="proxmox3",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 ```
+
+## Make an API Token
+
+This exporter uses an API token to make requests to Proxmox servers. To properly make an API token with some minimal set of permissions, you'll need to log into your Proxmox dashboard. There are multiple ways to set up an API token with some permissions, but here's one way:
+
+Navigate (on the left-side panel) to `Datacenter > Permissions`, you'll need to make a few things in here.
+
+* Make a new `Group`. Name it `ReadOnly`.
+* Make a new `User`. Name it `proxmox-exporter`. For realm, use `Proxmox VE Authentication Server`. Set a password. Assign it the group `ReadOnly` that we just created.
+* From the main `Permissions` Page in the left-side panel: Create a new `Group Permission`. For `Path` use `/`. For `Group` use `ReadOnly`. For `Role` select `PVEAuditor`. And keep the checkbox for `Propagate` checked.
+* Under `API Tokens` click `Add`. In the textboxes, set the user to `proxmox-exporter`, and enter `proxmox-exporter` for `Token ID`. Make sure the checkbox `Privilege Separation` is <b> _UNchecked._</b>
+
+This way, we've created an API token that inherits its permissions from its user account, which is subscribed to a group named `ReadOnly`, which is granted `PVEAuditor` permissions from the main permissions ACL. 
 
 ## License
 
