@@ -11,7 +11,8 @@ spec:
       rules:
         - alert: ProxmoxNodeDown
           annotations:
-            title: Proxmox node {{ printf "{{ $labels.node }}" }} is down
+            summary: Proxmox node {{ printf "{{ $labels.node }}" }} is down
+            description: Check the alerting Proxmox host
           expr: |
             proxmox_node_up == 0
           for: 1m
@@ -19,16 +20,17 @@ spec:
             severity: critical
         - alert: ProxmoxNodeTargetLost
           annotations:
-            title: Proxmox node up metric absent for {{ printf "{{ $labels.node }}" }}
+            summary: Proxmox node up metric absent for {{ printf "{{ $labels.node }}" }}
             description: Something wrong with the exporter, the Proxmox API server(s) it is configured to make requests to, or the server the exporter is running on
           expr: |
             absent_over_time(proxmox_node_up[1h])
           for: 1m
           labels:
             severity: critical
+
         - alert: ProxmoxGuestDown
           annotations:
-            title: Proxmox guest {{ printf "{{ $labels.name }}" }} is down
+            summary: Proxmox guest {{ printf "{{ $labels.name }}" }} is down
             description: Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is down
           expr: |
             proxmox_guest_up == 0
@@ -37,11 +39,49 @@ spec:
             severity: critical
         - alert: ProxmoxGuestTargetLost
           annotations:
-            title: Proxmox guest up metric absent for {{ printf "{{ $labels.name }}" }}
+            summary: Proxmox guest up metric absent for {{ printf "{{ $labels.name }}" }}
             description:  Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} may be down
           expr: |
             absent_over_time(proxmox_guest_up[1h])
           for: 1m
           labels:
             severity: critical
+
+        - alert: ProxmoxDiskUnhealthy
+          annotations:
+            summary: Proxmox disk {{ printf "{{ $labels.devpath }}" }} is unhealthy
+            description: The disk {{ printf "{{ $labels.devpath }}" }} in node {{ printf "{{ $labels.node }}" }} is reporting unhealthy in SMART tests
+          expr: |
+            proxmox_node_disk_smart_status == 0
+          for: 1m
+          labels:
+            severity: critical
+        - alert: ProxmoxDiskTargetLost
+          annotations:
+            summary: Lost metrics for Proxmox disk {{ printf "{{ $labels.devpath }}" }}
+            description:  The disk {{ printf "{{ $labels.devpath }}" }} in node {{ printf "{{ $labels.node }}" }} is not showing up in metrics from Proxmox anymore
+          expr: |
+            absent_over_time(proxmox_node_disk_smart_status[1h])
+          for: 1m
+          labels:
+            severity: critical
+
+        - alert: ProxmoxCertificateExpiring
+          annotations:
+            summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring in 7 days
+            description: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring soon!
+          expr: |
+            proxmox_node_days_until_cert_expiration < 7
+          for: 5m
+          labels:
+            severity: critical
+        - alert: ProxmoxCertificateExpiringWarning
+          annotations:
+            summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring in 14 days
+            description: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring soon
+          expr: |
+            proxmox_node_days_until_cert_expiration < 14
+          for: 5m
+          labels:
+            severity: warning
 {{- end }}
