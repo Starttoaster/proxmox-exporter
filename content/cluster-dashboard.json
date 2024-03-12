@@ -82,13 +82,17 @@
             "type": "prometheus",
             "uid": "${Datasource}"
           },
+          "disableTextWrap": false,
           "editorMode": "code",
           "exemplar": false,
-          "expr": "count(proxmox_node_version) by (version)",
+          "expr": "count by(version) (proxmox_node_version{cluster=~\"$cluster\"})",
+          "fullMetaSearch": false,
+          "includeNullMetadata": true,
           "instant": true,
           "legendFormat": "{{version}}",
           "range": false,
-          "refId": "A"
+          "refId": "A",
+          "useBackend": false
         }
       ],
       "title": "PVE Version Breakdown",
@@ -149,7 +153,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_node_up)",
+          "expr": "count(proxmox_node_up{cluster=~\"$cluster\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -214,7 +218,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_node_disk_smart_status)",
+          "expr": "count(proxmox_node_disk_smart_status{cluster=~\"$cluster\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -279,7 +283,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_guest_up{type=\"qemu\"})",
+          "expr": "count(proxmox_guest_up{cluster=~\"$cluster\",type=\"qemu\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -344,7 +348,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_guest_up{type=\"lxc\"})",
+          "expr": "count(proxmox_guest_up{cluster=~\"$cluster\",type=\"lxc\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -413,7 +417,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_node_up == 0)",
+          "expr": "count(proxmox_node_up{cluster=~\"$cluster\"} == 0)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -483,7 +487,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_node_disk_smart_status == 0)",
+          "expr": "count(proxmox_node_disk_smart_status{cluster=~\"$cluster\"} == 0)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -553,7 +557,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_guest_up{type=\"qemu\"} == 0)",
+          "expr": "count(proxmox_guest_up{cluster=~\"$cluster\",type=\"qemu\"} == 0)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -623,7 +627,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_guest_up{type=\"lxc\"} == 0)",
+          "expr": "count(proxmox_guest_up{cluster=~\"$cluster\",type=\"lxc\"} == 0)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -701,7 +705,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(proxmox_cluster_cpus_total)",
+          "expr": "sum(proxmox_cluster_cpus_total{cluster=~\"$cluster\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -766,7 +770,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(proxmox_cluster_memory_total_bytes)",
+          "expr": "sum(proxmox_cluster_memory_total_bytes{cluster=~\"$cluster\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -859,7 +863,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(proxmox_cluster_cpus_allocated)",
+          "expr": "sum(proxmox_cluster_cpus_allocated{cluster=~\"$cluster\"})",
           "instant": false,
           "legendFormat": "Allocated",
           "range": true,
@@ -871,7 +875,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(proxmox_cluster_cpus_total)",
+          "expr": "sum(proxmox_cluster_cpus_total{cluster=~\"$cluster\"})",
           "hide": false,
           "instant": false,
           "legendFormat": "Total",
@@ -966,7 +970,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(proxmox_cluster_memory_allocated_bytes)",
+          "expr": "sum(proxmox_cluster_memory_allocated_bytes{cluster=~\"$cluster\"})",
           "instant": false,
           "legendFormat": "Allocated",
           "range": true,
@@ -978,7 +982,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(proxmox_cluster_memory_total_bytes)",
+          "expr": "sum(proxmox_cluster_memory_total_bytes{cluster=~\"$cluster\"})",
           "hide": false,
           "instant": false,
           "legendFormat": "Total",
@@ -1044,7 +1048,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(proxmox_cluster_cpus_allocated)",
+          "expr": "sum(proxmox_cluster_cpus_allocated{cluster=~\"$cluster\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -1109,7 +1113,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(proxmox_cluster_memory_allocated_bytes)",
+          "expr": "sum(proxmox_cluster_memory_allocated_bytes{cluster=~\"$cluster\"})",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -1219,7 +1223,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "100 * (sum by (storage) (proxmox_node_storage_used_bytes{shared=\"true\"}) / sum by (storage) (proxmox_node_storage_total_bytes{shared=\"true\"}))",
+          "expr": "100 * (sum by (storage) (proxmox_node_storage_used_bytes{cluster=~\"$cluster\",shared=\"true\"}) / sum by (storage) (proxmox_node_storage_total_bytes{cluster=~\"$cluster\",shared=\"true\"}))",
           "hide": false,
           "instant": false,
           "legendFormat": "{{storage}}",
@@ -1232,7 +1236,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "100 * (sum by (storage,node) (proxmox_node_storage_used_bytes{shared=\"false\"}) / sum by (storage,node) (proxmox_node_storage_total_bytes{shared=\"false\"}))",
+          "expr": "100 * (sum by (storage,node) (proxmox_node_storage_used_bytes{cluster=~\"$cluster\",shared=\"false\"}) / sum by (storage,node) (proxmox_node_storage_total_bytes{cluster=~\"$cluster\",shared=\"false\"}))",
           "hide": false,
           "instant": false,
           "legendFormat": "{{node}}/{{storage}}",
@@ -1375,7 +1379,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "proxmox_node_days_until_cert_expiration",
+          "expr": "proxmox_node_days_until_cert_expiration{cluster=~\"$cluster\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1430,9 +1434,9 @@
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "Prometheus",
-          "value": "PBFA97CFB590B2093"
+          "selected": true,
+          "text": "default",
+          "value": "default"
         },
         "hide": 0,
         "includeAll": false,
@@ -1441,10 +1445,41 @@
         "name": "Datasource",
         "options": [],
         "query": "prometheus",
+        "queryValue": "",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${Datasource}"
+        },
+        "definition": "label_values(proxmox_node_up,cluster)",
+        "description": "Name of the Proxmox cluster",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": false,
+        "name": "cluster",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(proxmox_node_up,cluster)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
       }
     ]
   },
@@ -1456,6 +1491,6 @@
   "timezone": "browser",
   "title": "Proxmox",
   "uid": "cdf649p58atj4d",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }
