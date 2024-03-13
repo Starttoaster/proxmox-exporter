@@ -122,4 +122,23 @@ spec:
           for: 5m
           labels:
             severity: warning
+
+        - alert: ProxmoxCPUAllocationHigh
+          annotations:
+            summary: Proxmox node {{ printf "{{ $labels.node }}" }} has {{ printf "{{ $value }}" }}% of its CPU allocated to guests
+            description: It is recommended to keep more of your node's CPU unallocated for use by PVE and other server applications your Proxmox node runs
+          expr: |
+            100 * (proxmox_node_cpus_allocated / proxmox_node_cpus_total) > 90
+          for: 5m
+          labels:
+            severity: critical
+        - alert: ProxmoxMemoryAllocationHigh
+          annotations:
+            summary: Proxmox node {{ printf "{{ $labels.node }}" }} has {{ printf "{{ $value }}" }}% of its memory allocated to guests
+            description: It is recommended to keep more of your node's memory unallocated for use by PVE and other server applications your Proxmox node runs
+          expr: |
+            100 * (proxmox_node_memory_allocated_bytes / proxmox_node_memory_total_bytes) > 90
+          for: 5m
+          labels:
+            severity: critical
 {{- end }}
