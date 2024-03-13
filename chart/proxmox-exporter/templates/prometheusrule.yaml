@@ -68,8 +68,8 @@ spec:
 
         - alert: ProxmoxCertificateExpiring
           annotations:
-            summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring in 7 days
-            description: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring soon!
+            summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring in a week
+            description: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring in {{ printf "{{ $value }}" }} days
           expr: |
             proxmox_node_days_until_cert_expiration < 7
           for: 5m
@@ -77,10 +77,48 @@ spec:
             severity: critical
         - alert: ProxmoxCertificateExpiringWarning
           annotations:
-            summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring in 14 days
-            description: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring soon
+            summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring soon
+            description: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring in {{ printf "{{ $value }}" }} days
           expr: |
             proxmox_node_days_until_cert_expiration < 14
+          for: 5m
+          labels:
+            severity: warning
+
+        - alert: ProxmoxUnsharedStorageNearlyFull
+          annotations:
+            summary: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} nearly full
+            description: Volume of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+          expr: |
+            100 * (sum by (storage,node) (proxmox_node_storage_used_bytes{shared="false"}) / sum by (storage,node) (proxmox_node_storage_total_bytes)) > 90
+          for: 5m
+          labels:
+            severity: critical
+        - alert: ProxmoxUnsharedStorageFilling
+          annotations:
+            summary: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} nearly full
+            description: Volume of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+          expr: |
+            100 * (sum by (storage,node) (proxmox_node_storage_used_bytes{shared="false"}) / sum by (storage,node) (proxmox_node_storage_total_bytes)) > 80
+          for: 5m
+          labels:
+            severity: warning
+
+        - alert: ProxmoxSharedStorageNearlyFull
+          annotations:
+            summary: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} nearly full
+            description: Volume of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+          expr: |
+            100 * (sum by (storage) (proxmox_node_storage_used_bytes{shared="true"}) / sum by (storage) (proxmox_node_storage_total_bytes)) > 90
+          for: 5m
+          labels:
+            severity: critical
+        - alert: ProxmoxSharedStorageFilling
+          annotations:
+            summary: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} nearly full
+            description: Volume of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+          expr: |
+            100 * (sum by (storage) (proxmox_node_storage_used_bytes{shared="true"}) / sum by (storage) (proxmox_node_storage_total_bytes)) > 80
           for: 5m
           labels:
             severity: warning
