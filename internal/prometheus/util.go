@@ -14,9 +14,9 @@ func fqAddPrefix(name string) string {
 }
 
 // daysUntilUnixTime takes a unix timestamp in an int and returns the integer number of days until the given date
-func daysUntilUnixTime(notAfter int) (int, error) {
+func daysUntilUnixTime(notAfter int) int {
 	currentTime := time.Now().Unix()
 	differenceSeconds := int64(notAfter) - currentTime
 	differenceDays := differenceSeconds / (60 * 60 * 24)
-	return int(differenceDays), nil
+	return int(differenceDays)
 }
