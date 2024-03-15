@@ -21,6 +21,7 @@ type collectNodeResponse struct {
 
 func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNodesData, resultChan chan<- collectNodeResponse, wg *sync.WaitGroup) {
 	defer wg.Done()
+	var resp collectNodeResponse
 
 	// Collect metrics that just need node data
 	c.collectNodeUpMetric(ch, node)
@@ -29,7 +30,7 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNod
 	var vmMetrics *collectVirtualMachineMetricsResponse
 	vms, err := wrappedProxmox.GetNodeQemu(node.Node)
 	if err != nil {
-		logger.Logger.Error(err.Error())
+		logger.Logger.Error("failed making request to get node VMs", "node", node.Node, "error", err.Error())
 	} else {
 		vmMetrics = c.collectVirtualMachineMetrics(ch, node, vms)
 	}
@@ -38,13 +39,15 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNod
 	var lxcMetrics *collectLxcMetricsResponse
 	lxcs, err := wrappedProxmox.GetNodeLxc(node.Node)
 	if err != nil {
-		logger.Logger.Error(err.Error())
+		logger.Logger.Error("failed making request to get node LXCs", "node", node.Node, "error", err.Error())
 	} else {
 		lxcMetrics = c.collectLxcMetrics(ch, node, lxcs)
 	}
 
 	// Collect VM + LXC aggregate metrics
 	if vmMetrics != nil && lxcMetrics != nil {
+		resp.clusterCPUsAlloc = vmMetrics.cpusAllocated + lxcMetrics.cpusAllocated
+		resp.clusterMemAlloc = vmMetrics.memAllocated + lxcMetrics.memAllocated
 		ch <- prometheus.MustNewConstMetric(c.nodeCPUsAlloc, prometheus.GaugeValue, float64(vmMetrics.cpusAllocated+lxcMetrics.cpusAllocated), node.Node)
 		ch <- prometheus.MustNewConstMetric(c.nodeMemAlloc, prometheus.GaugeValue, float64(vmMetrics.memAllocated+lxcMetrics.memAllocated), node.Node)
 	}
@@ -52,7 +55,7 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNod
 	// Get storage data on this node
 	stores, err := wrappedProxmox.GetNodeStorage(node.Node)
 	if err != nil {
-		logger.Logger.Error(err.Error())
+		logger.Logger.Error("failed making request to get node storage", "node", node.Node, "error", err.Error())
 	} else {
 		c.collectStorageMetrics(ch, node, stores)
 	}
@@ -60,7 +63,7 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNod
 	// Get disk data on this node
 	disks, err := wrappedProxmox.GetNodeDisksList(node.Node)
 	if err != nil {
-		logger.Logger.Error(err.Error())
+		logger.Logger.Error("failed making request to get node disks", "node", node.Node, "error", err.Error())
 	} else {
 		c.collectDiskMetrics(ch, node, disks)
 	}
@@ -68,7 +71,7 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNod
 	// Get certificate data on this node
 	certs, err := wrappedProxmox.GetNodeCertificatesInfo(node.Node)
 	if err != nil {
-		logger.Logger.Error(err.Error())
+		logger.Logger.Error("failed making request to get node certificates", "node", node.Node, "error", err.Error())
 	} else {
 		c.collectCertificateMetrics(ch, node, certs)
 	}
@@ -76,20 +79,17 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNod
 	// Get status on this node
 	nodeStatus, err := wrappedProxmox.GetNodeStatus(node.Node)
 	if err != nil {
-		logger.Logger.Error(err.Error())
+		logger.Logger.Error("failed making request to get node status", "node", node.Node, "error", err.Error())
 	} else {
+		resp.clusterCPUs = nodeStatus.Data.CPUInfo.Cpus
+		resp.clusterMem = nodeStatus.Data.Memory.Total
 		c.collectNodeVersionMetric(ch, node, nodeStatus.Data)
 		ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeStatus.Data.CPUInfo.Cpus), node.Node)
 		ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(nodeStatus.Data.Memory.Total), node.Node)
 	}
 
 	// Send the result back to the main function through the channel
-	resultChan <- collectNodeResponse{
-		clusterCPUs:      nodeStatus.Data.CPUInfo.Cpus,
-		clusterCPUsAlloc: vmMetrics.cpusAllocated + lxcMetrics.cpusAllocated,
-		clusterMem:       nodeStatus.Data.Memory.Total,
-		clusterMemAlloc:  vmMetrics.memAllocated + lxcMetrics.memAllocated,
-	}
+	resultChan <- resp
 }
 
 func (c *Collector) collectNodeVersionMetric(ch chan<- prometheus.Metric, node proxmox.GetNodesData, status proxmox.GetNodeStatusData) {
@@ -118,14 +118,8 @@ func (c *Collector) collectDiskMetrics(ch chan<- prometheus.Metric, node proxmox
 func (c *Collector) collectCertificateMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, certs *proxmox.GetNodeCertificatesInfoResponse) {
 	for _, cert := range certs.Data {
 		// Add days until certificate expiration metric
-		expDays, err := daysUntilUnixTime(cert.NotAfter)
-		if err != nil {
-			// Log error and give 0 days until expiry on metric to report a potential issue
-			logger.Logger.Warn(err.Error(), "notafter", cert.NotAfter, "subject", cert.Subject)
-			ch <- prometheus.MustNewConstMetric(c.daysUntilCertExpiry, prometheus.GaugeValue, 0.0, node.Node, cert.Subject)
-		} else {
-			ch <- prometheus.MustNewConstMetric(c.daysUntilCertExpiry, prometheus.GaugeValue, float64(expDays), node.Node, cert.Subject)
-		}
+		expDays := daysUntilUnixTime(cert.NotAfter)
+		ch <- prometheus.MustNewConstMetric(c.daysUntilCertExpiry, prometheus.GaugeValue, float64(expDays), node.Node, cert.Subject)
 	}
 }
 
