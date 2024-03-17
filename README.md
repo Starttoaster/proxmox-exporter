@@ -153,19 +153,9 @@ The Helm chart in this repository comes with some Prometheus rules for PVE serve
 
 ## Metrics
 
-A list of metrics this exports is below. Newlines between metrics were added for readability.
+A list of metrics this exports is below. Newlines between metrics were added for readability. These metrics were taken from a PVE cluster, hence the cluster label; standalone PVE hosts will export without a cluster label.
 
 ```
-# HELP promhttp_metric_handler_requests_in_flight Current number of scrapes being served.
-# TYPE promhttp_metric_handler_requests_in_flight gauge
-promhttp_metric_handler_requests_in_flight 1
-
- HELP promhttp_metric_handler_requests_total Total number of scrapes by HTTP status code.
-# TYPE promhttp_metric_handler_requests_total counter
-promhttp_metric_handler_requests_total{code="200"} 16564
-promhttp_metric_handler_requests_total{code="500"} 0
-promhttp_metric_handler_requests_total{code="503"} 0
-
 # HELP proxmox_cluster_cpus_allocated Total number of vCPU (cores/threads) allocated to guests for a cluster.
 # TYPE proxmox_cluster_cpus_allocated gauge
 proxmox_cluster_cpus_allocated{cluster="prd"} 24
