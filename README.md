@@ -147,8 +147,6 @@ Simply copy the JSON, and in your grafana instance, in the Dashboards tab, selec
 
 ![Cluster dashboard](content/cluster-dashboard.png)
 
-A Grafana dashboard that implements this exporter with metrics from node_exporter is also in the works. Contributions are welcome for this as well.
-
 ## Alerting
 
 The Helm chart in this repository comes with some Prometheus rules for PVE servers. More alerts are being added to it over time. Find that in the `chart/proxmox-exporter/templates` directory.
