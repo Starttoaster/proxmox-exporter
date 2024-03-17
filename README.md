@@ -147,127 +147,124 @@ Simply copy the JSON, and in your grafana instance, in the Dashboards tab, selec
 
 ![Cluster dashboard](content/cluster-dashboard.png)
 
-A Grafana dashboard that implements this exporter with metrics from node_exporter is also in the works. Contributions are welcome for this as well.
-
 ## Alerting
 
 The Helm chart in this repository comes with some Prometheus rules for PVE servers. More alerts are being added to it over time. Find that in the `chart/proxmox-exporter/templates` directory.
 
 ## Metrics
 
-A list of metrics this exports is below. Newlines between metrics were added for readability.
+A list of metrics this exports is below. Newlines between metrics were added for readability. These metrics were taken from a PVE cluster, hence the cluster label; standalone PVE hosts will export without a cluster label.
 
 ```
 # HELP proxmox_cluster_cpus_allocated Total number of vCPU (cores/threads) allocated to guests for a cluster.
 # TYPE proxmox_cluster_cpus_allocated gauge
-proxmox_cluster_cpus_allocated 24
+proxmox_cluster_cpus_allocated{cluster="prd"} 24
 
-# HELP proxmox_cluster_cpus_total Total number of vCPU (cores/threads) for a cluster.
+ HELP proxmox_cluster_cpus_total Total number of vCPU (cores/threads) for a cluster.
 # TYPE proxmox_cluster_cpus_total gauge
-proxmox_cluster_cpus_total 32
+proxmox_cluster_cpus_total{cluster="prd"} 32
 
 # HELP proxmox_cluster_memory_allocated_bytes Total amount of memory allocated in bytes to guests for a cluster.
 # TYPE proxmox_cluster_memory_allocated_bytes gauge
-proxmox_cluster_memory_allocated_bytes 6.4961380352e+10
+proxmox_cluster_memory_allocated_bytes{cluster="prd"} 6.4961380352e+10
 
 # HELP proxmox_cluster_memory_total_bytes Total amount of memory in bytes for a cluster.
 # TYPE proxmox_cluster_memory_total_bytes gauge
-proxmox_cluster_memory_total_bytes 1.67585333248e+11
+proxmox_cluster_memory_total_bytes{cluster="prd"} 1.67585333248e+11
 
 # HELP proxmox_guest_up Shows whether VMs and LXCs in a proxmox cluster are up. (0=down,1=up)
 # TYPE proxmox_guest_up gauge
-proxmox_guest_up{host="proxmox1",name="CT101",type="lxc",vmid="101"} 0
-proxmox_guest_up{host="proxmox1",name="controller1",type="qemu",vmid="108"} 1
-proxmox_guest_up{host="proxmox1",name="worker1",type="qemu",vmid="100"} 1
-proxmox_guest_up{host="proxmox2",name="controller2",type="qemu",vmid="107"} 1
-proxmox_guest_up{host="proxmox2",name="worker2",type="qemu",vmid="104"} 1
-proxmox_guest_up{host="proxmox3",name="controller3",type="qemu",vmid="106"} 1
-proxmox_guest_up{host="proxmox3",name="worker3",type="qemu",vmid="105"} 1
+proxmox_guest_up{cluster="prd",name="CT101",node="cmp1",type="lxc",vmid="101"} 0
+proxmox_guest_up{cluster="prd",name="controller1",node="cmp1",type="qemu",vmid="108"} 1
+proxmox_guest_up{cluster="prd",name="controller2",node="cmp2",type="qemu",vmid="107"} 1
+proxmox_guest_up{cluster="prd",name="controller3",node="cmp3",type="qemu",vmid="106"} 1
 
 # HELP proxmox_node_cpus_allocated Total number of vCPU (cores/threads) allocated to guests for a node.
 # TYPE proxmox_node_cpus_allocated gauge
-proxmox_node_cpus_allocated{node="proxmox1"} 12
-proxmox_node_cpus_allocated{node="proxmox2"} 6
-proxmox_node_cpus_allocated{node="proxmox3"} 6
+proxmox_node_cpus_allocated{cluster="prd",node="cmp1"} 12
+proxmox_node_cpus_allocated{cluster="prd",node="cmp2"} 6
+proxmox_node_cpus_allocated{cluster="prd",node="cmp3"} 6
 
 # HELP proxmox_node_cpus_total Total number of vCPU (cores/threads) for a node.
 # TYPE proxmox_node_cpus_total gauge
-proxmox_node_cpus_total{node="proxmox1"} 16
-proxmox_node_cpus_total{node="proxmox2"} 8
-proxmox_node_cpus_total{node="proxmox3"} 8
+proxmox_node_cpus_total{cluster="prd",node="cmp1"} 16
+proxmox_node_cpus_total{cluster="prd",node="cmp2"} 8
+proxmox_node_cpus_total{cluster="prd",node="cmp3"} 8
 
 # HELP proxmox_node_days_until_cert_expiration Number of days until a certificate in PVE expires. Can report 0 days on metric collection errors, check exporter logs.
 # TYPE proxmox_node_days_until_cert_expiration gauge
-proxmox_node_days_until_cert_expiration{node="proxmox1",subject="/CN=Proxmox Virtual Environment/OU=c502108f-f0b7-4217-bb9f-4b8e3931be3c/O=PVE Cluster Manager CA"} 3625
-proxmox_node_days_until_cert_expiration{node="proxmox1",subject="/OU=PVE Cluster Node/O=Proxmox Virtual Environment/CN=proxmox1.local"} 705
-proxmox_node_days_until_cert_expiration{node="proxmox2",subject="/CN=Proxmox Virtual Environment/OU=c502108f-f0b7-4217-bb9f-4b8e3931be3c/O=PVE Cluster Manager CA"} 3625
-proxmox_node_days_until_cert_expiration{node="proxmox2",subject="/OU=PVE Cluster Node/O=Proxmox Virtual Environment/CN=proxmox2.local"} 708
-proxmox_node_days_until_cert_expiration{node="proxmox3",subject="/CN=Proxmox Virtual Environment/OU=c502108f-f0b7-4217-bb9f-4b8e3931be3c/O=PVE Cluster Manager CA"} 3625
-proxmox_node_days_until_cert_expiration{node="proxmox3",subject="/OU=PVE Cluster Node/O=Proxmox Virtual Environment/CN=proxmox3.local"} 710
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp1",subject="/CN=Proxmox Virtual Environment/OU=c502108f-f0b7-4217-bb9f-4b8e3931be3c/O=PVE Cluster Manager CA"} 3617
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp1",subject="/CN=cmp1.gentoo-yo.ts.net"} 76
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp1",subject="/OU=PVE Cluster Node/O=Proxmox Virtual Environment/CN=cmp1.local"} 697
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp2",subject="/CN=Proxmox Virtual Environment/OU=c502108f-f0b7-4217-bb9f-4b8e3931be3c/O=PVE Cluster Manager CA"} 3617
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp2",subject="/CN=cmp2.gentoo-yo.ts.net"} 76
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp2",subject="/OU=PVE Cluster Node/O=Proxmox Virtual Environment/CN=cmp2.gentoo-yo.ts.net"} 699
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp3",subject="/CN=Proxmox Virtual Environment/OU=c502108f-f0b7-4217-bb9f-4b8e3931be3c/O=PVE Cluster Manager CA"} 3617
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp3",subject="/CN=cmp3.gentoo-yo.ts.net"} 76
+proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp3",subject="/OU=PVE Cluster Node/O=Proxmox Virtual Environment/CN=cmp3.local"} 702
 
 # HELP proxmox_node_disk_smart_status Disk SMART health status. (0=FAIL/Unknown,1=PASSED)
 # TYPE proxmox_node_disk_smart_status gauge
-proxmox_node_disk_smart_status{devpath="/dev/nvme0n1",node="proxmox1"} 1
-proxmox_node_disk_smart_status{devpath="/dev/nvme0n1",node="proxmox2"} 1
-proxmox_node_disk_smart_status{devpath="/dev/nvme0n1",node="proxmox3"} 1
-proxmox_node_disk_smart_status{devpath="/dev/sda",node="proxmox1"} 1
-proxmox_node_disk_smart_status{devpath="/dev/sda",node="proxmox2"} 1
-proxmox_node_disk_smart_status{devpath="/dev/sda",node="proxmox3"} 1
-proxmox_node_disk_smart_status{devpath="/dev/sdb",node="proxmox1"} 1
+proxmox_node_disk_smart_status{cluster="prd",devpath="/dev/nvme0n1",node="cmp1"} 1
+proxmox_node_disk_smart_status{cluster="prd",devpath="/dev/nvme0n1",node="cmp2"} 1
+proxmox_node_disk_smart_status{cluster="prd",devpath="/dev/nvme0n1",node="cmp3"} 1
+proxmox_node_disk_smart_status{cluster="prd",devpath="/dev/sda",node="cmp1"} 1
+proxmox_node_disk_smart_status{cluster="prd",devpath="/dev/sda",node="cmp2"} 1
+proxmox_node_disk_smart_status{cluster="prd",devpath="/dev/sda",node="cmp3"} 1
 
 # HELP proxmox_node_memory_allocated_bytes Total amount of memory allocated in bytes to guests for a node.
 # TYPE proxmox_node_memory_allocated_bytes gauge
-proxmox_node_memory_allocated_bytes{node="proxmox1"} 3.9191576576e+10
-proxmox_node_memory_allocated_bytes{node="proxmox2"} 1.2884901888e+10
-proxmox_node_memory_allocated_bytes{node="proxmox3"} 1.2884901888e+10
+proxmox_node_memory_allocated_bytes{cluster="prd",node="cmp1"} 3.9191576576e+10
+proxmox_node_memory_allocated_bytes{cluster="prd",node="cmp2"} 1.2884901888e+10
+proxmox_node_memory_allocated_bytes{cluster="prd",node="cmp3"} 1.2884901888e+10
 
-# HELP proxmox_node_memory_total_bytes Total amount of memory in bytes for a nodes.
+# HELP proxmox_node_memory_total_bytes Total amount of memory in bytes for a node.
 # TYPE proxmox_node_memory_total_bytes gauge
-proxmox_node_memory_total_bytes{node="proxmox1"} 1.34850502656e+11
-proxmox_node_memory_total_bytes{node="proxmox2"} 1.6367079424e+10
-proxmox_node_memory_total_bytes{node="proxmox3"} 1.6367751168e+10
+proxmox_node_memory_total_bytes{cluster="prd",node="cmp1"} 1.34850502656e+11
+proxmox_node_memory_total_bytes{cluster="prd",node="cmp2"} 1.6367079424e+10
+proxmox_node_memory_total_bytes{cluster="prd",node="cmp3"} 1.6367751168e+10
 
 # HELP proxmox_node_storage_total_bytes Total amount of storage available in a volume on a node by storage type.
 # TYPE proxmox_node_storage_total_bytes gauge
-proxmox_node_storage_total_bytes{node="proxmox1",storage="cephfs",type="cephfs"} 2.338563555328e+12
-proxmox_node_storage_total_bytes{node="proxmox1",storage="local",type="dir"} 1.0086172672e+11
-proxmox_node_storage_total_bytes{node="proxmox1",storage="local-lvm",type="lvmthin"} 1.884119105536e+12
-proxmox_node_storage_total_bytes{node="proxmox1",storage="pool1",type="rbd"} 2.40695626515e+12
-proxmox_node_storage_total_bytes{node="proxmox2",storage="cephfs",type="cephfs"} 2.338563555328e+12
-proxmox_node_storage_total_bytes{node="proxmox2",storage="local",type="dir"} 1.0086172672e+11
-proxmox_node_storage_total_bytes{node="proxmox2",storage="local-lvm",type="lvmthin"} 1.836111101952e+12
-proxmox_node_storage_total_bytes{node="proxmox2",storage="pool1",type="rbd"} 2.40695626515e+12
-proxmox_node_storage_total_bytes{node="proxmox3",storage="cephfs",type="cephfs"} 2.338563555328e+12
-proxmox_node_storage_total_bytes{node="proxmox3",storage="local",type="dir"} 1.0086172672e+11
-proxmox_node_storage_total_bytes{node="proxmox3",storage="local-lvm",type="lvmthin"} 3.74538764288e+11
-proxmox_node_storage_total_bytes{node="proxmox3",storage="pool1",type="rbd"} 2.40695626515e+12
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp1",shared="false",storage="local",type="dir"} 1.0086172672e+11
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp1",shared="false",storage="local-lvm",type="lvmthin"} 1.884119105536e+12
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp1",shared="true",storage="cephfs",type="cephfs"} 2.288261267456e+12
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp1",shared="true",storage="pool1",type="rbd"} 2.394338585869e+12
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp2",shared="false",storage="local",type="dir"} 1.0086172672e+11
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp2",shared="false",storage="local-lvm",type="lvmthin"} 1.836111101952e+12
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp2",shared="true",storage="cephfs",type="cephfs"} 2.288261267456e+12
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp2",shared="true",storage="pool1",type="rbd"} 2.394338585869e+12
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp3",shared="false",storage="local",type="dir"} 1.0086172672e+11
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp3",shared="false",storage="local-lvm",type="lvmthin"} 3.74538764288e+11
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp3",shared="true",storage="cephfs",type="cephfs"} 2.288261267456e+12
+proxmox_node_storage_total_bytes{cluster="prd",node="cmp3",shared="true",storage="pool1",type="rbd"} 2.394338585869e+12
 
 # HELP proxmox_node_storage_used_bytes Total amount of storage used in a volume on a node by storage type.
 # TYPE proxmox_node_storage_used_bytes gauge
-proxmox_node_storage_used_bytes{node="proxmox1",storage="cephfs",type="cephfs"} 0
-proxmox_node_storage_used_bytes{node="proxmox1",storage="local",type="dir"} 5.601427456e+09
-proxmox_node_storage_used_bytes{node="proxmox1",storage="local-lvm",type="lvmthin"} 1.88977146285e+11
-proxmox_node_storage_used_bytes{node="proxmox1",storage="pool1",type="rbd"} 6.838930195e+10
-proxmox_node_storage_used_bytes{node="proxmox2",storage="cephfs",type="cephfs"} 0
-proxmox_node_storage_used_bytes{node="proxmox2",storage="local",type="dir"} 5.399289856e+09
-proxmox_node_storage_used_bytes{node="proxmox2",storage="local-lvm",type="lvmthin"} 2.3869444325e+10
-proxmox_node_storage_used_bytes{node="proxmox2",storage="pool1",type="rbd"} 6.838930195e+10
-proxmox_node_storage_used_bytes{node="proxmox3",storage="cephfs",type="cephfs"} 0
-proxmox_node_storage_used_bytes{node="proxmox3",storage="local",type="dir"} 5.412220928e+09
-proxmox_node_storage_used_bytes{node="proxmox3",storage="local-lvm",type="lvmthin"} 1.6367343999e+10
-proxmox_node_storage_used_bytes{node="proxmox3",storage="pool1",type="rbd"} 6.838930195e+10
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp1",shared="false",storage="local",type="dir"} 5.667893248e+09
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp1",shared="false",storage="local-lvm",type="lvmthin"} 1.95571563154e+11
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp1",shared="true",storage="cephfs",type="cephfs"} 0
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp1",shared="true",storage="pool1",type="rbd"} 1.06073386253e+11
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp2",shared="false",storage="local",type="dir"} 5.446627328e+09
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp2",shared="false",storage="local-lvm",type="lvmthin"} 2.4603888766e+10
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp2",shared="true",storage="cephfs",type="cephfs"} 0
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp2",shared="true",storage="pool1",type="rbd"} 1.06073386253e+11
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp3",shared="false",storage="local",type="dir"} 5.451096064e+09
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp3",shared="false",storage="local-lvm",type="lvmthin"} 1.7678229674e+10
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp3",shared="true",storage="cephfs",type="cephfs"} 0
+proxmox_node_storage_used_bytes{cluster="prd",node="cmp3",shared="true",storage="pool1",type="rbd"} 1.06073386253e+11
 
 # HELP proxmox_node_up Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)
 # TYPE proxmox_node_up gauge
-proxmox_node_up{node="proxmox1",type="node"} 1
-proxmox_node_up{node="proxmox2",type="node"} 1
-proxmox_node_up{node="proxmox3",type="node"} 1
+proxmox_node_up{cluster="prd",node="cmp1"} 1
+proxmox_node_up{cluster="prd",node="cmp2"} 1
+proxmox_node_up{cluster="prd",node="cmp3"} 1
 
 # HELP proxmox_node_version Shows PVE manager node version information
 # TYPE proxmox_node_version gauge
-proxmox_node_version{node="proxmox1",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
-proxmox_node_version{node="proxmox2",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
-proxmox_node_version{node="proxmox3",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
+proxmox_node_version{cluster="prd",node="cmp1",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
+proxmox_node_version{cluster="prd",node="cmp2",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
+proxmox_node_version{cluster="prd",node="cmp3",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 ```
 
 ## Make an API Token
