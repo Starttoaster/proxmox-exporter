@@ -11,7 +11,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	log "github.com/starttoaster/proxmox-exporter/internal/logger"
 
-	"github.com/starttoaster/proxmox-exporter/pkg/proxmox"
+	proxmox "github.com/starttoaster/go-proxmox"
 )
 
 var (
