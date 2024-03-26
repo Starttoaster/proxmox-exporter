@@ -1,5 +1,7 @@
 # Proxmox Exporter
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/starttoaster/proxmox-exporter)](https://goreportcard.com/report/github.com/starttoaster/proxmox-exporter)
+
 A Prometheus exporter for individual PVE hosts or clusters. This is tested againsts PVE 8.x systems. Earlier Proxmox versions will be EOL soon, but in future major updates I'll try to keep the exporter metrics backwards compatible.
 
 - [About](#about)
