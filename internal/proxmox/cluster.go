@@ -2,8 +2,8 @@ package proxmox
 
 import (
 	"github.com/patrickmn/go-cache"
+	proxmox "github.com/starttoaster/go-proxmox"
 	log "github.com/starttoaster/proxmox-exporter/internal/logger"
-	"github.com/starttoaster/proxmox-exporter/pkg/proxmox"
 )
 
 // GetClusterStatus returns a proxmox GetClusterStatusResponse object or an error from the /cluster/status endpoint

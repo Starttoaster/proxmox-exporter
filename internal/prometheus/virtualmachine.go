@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/starttoaster/proxmox-exporter/pkg/proxmox"
+	proxmox "github.com/starttoaster/go-proxmox"
 )
 
 // collectVirtualMachineMetricsResponse is a struct wrapper for all VM metrics that need to be passed back for control flow,

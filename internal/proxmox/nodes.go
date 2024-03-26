@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/patrickmn/go-cache"
+	proxmox "github.com/starttoaster/go-proxmox"
 	log "github.com/starttoaster/proxmox-exporter/internal/logger"
-	"github.com/starttoaster/proxmox-exporter/pkg/proxmox"
 )
 
 // GetNodes returns a proxmox NodeStatuses object or an error from the /nodes endpoint

@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/starttoaster/proxmox-exporter/pkg/proxmox"
+	proxmox "github.com/starttoaster/go-proxmox"
 )
 
 // collectLxcMetricsResponse is a struct wrapper for all LXC metrics that need to be passed back for control flow,

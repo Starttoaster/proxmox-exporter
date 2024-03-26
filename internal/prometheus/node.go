@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
+	proxmox "github.com/starttoaster/go-proxmox"
 	"github.com/starttoaster/proxmox-exporter/internal/logger"
 	wrappedProxmox "github.com/starttoaster/proxmox-exporter/internal/proxmox"
-	"github.com/starttoaster/proxmox-exporter/pkg/proxmox"
 )
 
 // collectNodeResponse is a struct wrapper for all metrics that need to be passed back for control flow,
