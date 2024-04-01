@@ -8,7 +8,7 @@ require (
 	github.com/prometheus/client_golang v1.19.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
-	github.com/starttoaster/go-proxmox v0.0.0-20240326051917-0241210bd2cf
+	github.com/starttoaster/go-proxmox v0.0.1
 )
 
 require (
