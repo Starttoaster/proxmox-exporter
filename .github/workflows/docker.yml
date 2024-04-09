@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+    tags:
+      - '**'
   workflow_dispatch:
   schedule:
-    - cron: '5 0 * * 0'
+    - cron: '0 9 * * 1'
 
 permissions:
   id-token: write
@@ -44,7 +46,7 @@ jobs:
             prefix=
             suffix=
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=main,enable={{is_default_branch}}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
@@ -54,5 +56,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           platforms: "linux/amd64,linux/arm64"
-          push: ${{ (github.event_name != 'pull_request') || (github.event.pull_request.head.repo.full_name == github.repository && !startsWith(github.ref, 'refs/heads/dependabot/')) && 'true' || 'false' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
