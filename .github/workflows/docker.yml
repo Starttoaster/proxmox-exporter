@@ -54,9 +54,9 @@ jobs:
             suffix=
           tags: |
             type=raw,value=main,enable={{is_default_branch}}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern=v{{major}}
             type=sha,format=long
 
       - name: Build Docker Container
