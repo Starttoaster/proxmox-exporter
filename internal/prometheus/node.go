@@ -26,6 +26,11 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNod
 	// Collect metrics that just need node data
 	c.collectNodeUpMetric(ch, node)
 
+	// Exit here if node status is not "online", no more metrics to collect from this PVE host
+	if !strings.EqualFold(node.Status, "online") {
+		return
+	}
+
 	// Get VM metrics on this node
 	var vmMetrics *collectVirtualMachineMetricsResponse
 	vms, err := wrappedProxmox.GetNodeQemu(node.Node)
