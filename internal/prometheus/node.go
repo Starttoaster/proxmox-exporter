@@ -21,6 +21,7 @@ type collectNodeResponse struct {
 
 func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNodesData, resultChan chan<- collectNodeResponse, wg *sync.WaitGroup) {
 	defer wg.Done()
+	defer logger.Logger.Debug("finished requests for node data", "node", node.Node)
 	var resp collectNodeResponse
 
 	// Collect metrics that just need node data
