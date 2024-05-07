@@ -18,9 +18,16 @@ var (
 	// ClusterName gets populated with the proxmox cluster's cluster name on clustered PVE instances
 	ClusterName string
 
-	clients map[string]*proxmox.Client
-	cash    *cache.Cache
+	clients     map[string]wrappedClient
+	banDuration = time.Duration(1 * time.Minute)
+	cash        *cache.Cache
 )
+
+type wrappedClient struct {
+	client      *proxmox.Client
+	banned      bool
+	bannedUntil time.Time
+}
 
 // Init constructs a proxmox API client for this package taking in a token
 func Init(endpoints []string, tokenID, token string, tlsVerify bool) error {
@@ -39,7 +46,7 @@ func Init(endpoints []string, tokenID, token string, tlsVerify bool) error {
 	}
 
 	// Make and init proxmox client map
-	clients = make(map[string]*proxmox.Client)
+	clients = make(map[string]wrappedClient)
 	for _, endpoint := range endpoints {
 		// Parse URL for hostname
 		parsedURL, err := url.Parse(endpoint)
@@ -59,13 +66,18 @@ func Init(endpoints []string, tokenID, token string, tlsVerify bool) error {
 		}
 
 		// Add client to map
-		clients[hostname] = c
+		clients[hostname] = wrappedClient{
+			client: c,
+		}
 	}
 
 	// init cache -- at longest, cache will live for 29 seconds
 	// which should ensure metrics are updated if scraping in 30 second intervals
 	// TODO should cache lifespan and cache expiration intervals be user configurable?
 	cash = cache.New(24*time.Second, 5*time.Second)
+
+	// Maintain client bans
+	go refreshClientBans()
 
 	retrieveClusterName()
 
@@ -93,5 +105,44 @@ func retrieveClusterName() {
 	}
 	if ClusterName != "" {
 		log.Logger.Info("discovered PVE cluster", "cluster", ClusterName)
+	}
+}
+
+// refreshClientBans iterates over the configured clients and checks if their ban is still valid over time
+func refreshClientBans() {
+	for {
+		// Loop through clients from client map
+		for name, c := range clients {
+			// Check if the client is banned -- if banned we need to check if the client's banUntil time has expired
+			if c.banned && time.Now().After(c.bannedUntil) {
+				// If the ban expired, make a request, see if it succeeds, and unban it if successful. Increase the ban timer if not
+				_, _, err := c.client.Nodes.GetNodes()
+				if err == nil {
+					// Unban client - request successful
+					log.Logger.Debug("unbanning client, test request successful", "name", name)
+					clients[name] = wrappedClient{
+						client: c.client,
+					}
+					continue
+				} else {
+					// Re-up ban timer - request failed
+					log.Logger.Debug("re-upping ban on client, test request failed", "name", name, "error", err)
+					banClient(name, c)
+					continue
+				}
+			}
+		}
+
+		time.Sleep(5 * time.Second)
+	}
+}
+
+// banClient bans a client for the defined duration
+func banClient(name string, c wrappedClient) {
+	log.Logger.Debug("banning client", "name", name, "duration", banDuration)
+	clients[name] = wrappedClient{
+		client:      c.client,
+		banned:      true,
+		bannedUntil: time.Now().Add(banDuration),
 	}
 }

@@ -23,14 +23,25 @@ func GetNodes() (*proxmox.GetNodesResponse, error) {
 
 	// Make request if not found in cache
 	var err error
-	for _, c := range clients {
-		nodes, _, err = c.Nodes.GetNodes()
+	for name, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		nodes, _, err = c.client.Nodes.GetNodes()
 		if err == nil {
 			break
+		} else {
+			banClient(name, c)
 		}
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if nodes == nil {
+		return nil, fmt.Errorf("request to get node list was not successful. It's possible all clients are banned")
 	}
 
 	// Update cache
@@ -54,14 +65,25 @@ func GetNodeStatus(name string) (*proxmox.GetNodeStatusResponse, error) {
 
 	// Make request if not found in cache
 	var err error
-	for _, c := range clients {
-		node, _, err = c.Nodes.GetNodeStatus(name)
+	for clientName, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		node, _, err = c.client.Nodes.GetNodeStatus(name)
 		if err == nil {
 			break
+		} else {
+			banClient(clientName, c)
 		}
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if node == nil {
+		return nil, fmt.Errorf("request to get node status was not successful. It's possible all clients are banned")
 	}
 
 	// Update cache
@@ -85,14 +107,25 @@ func GetNodeQemu(name string) (*proxmox.GetNodeQemuResponse, error) {
 
 	// Make request if not found in cache
 	var err error
-	for _, c := range clients {
-		vms, _, err = c.Nodes.GetNodeQemu(name)
+	for clientName, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		vms, _, err = c.client.Nodes.GetNodeQemu(name)
 		if err == nil {
 			break
+		} else {
+			banClient(clientName, c)
 		}
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if vms == nil {
+		return nil, fmt.Errorf("request to get node VMs was not successful. It's possible all clients are banned")
 	}
 
 	// Update per-node cache since we have it
@@ -116,14 +149,25 @@ func GetNodeLxc(name string) (*proxmox.GetNodeLxcResponse, error) {
 
 	// Make request if not found in cache
 	var err error
-	for _, c := range clients {
-		lxcs, _, err = c.Nodes.GetNodeLxc(name)
+	for clientName, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		lxcs, _, err = c.client.Nodes.GetNodeLxc(name)
 		if err == nil {
 			break
+		} else {
+			banClient(clientName, c)
 		}
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if lxcs == nil {
+		return nil, fmt.Errorf("request to get node LXCs was not successful. It's possible all clients are banned")
 	}
 
 	// Update per-node cache since we have it
@@ -147,14 +191,25 @@ func GetNodeDisksList(name string) (*proxmox.GetNodeDisksListResponse, error) {
 
 	// Make request if not found in cache
 	var err error
-	for _, c := range clients {
-		disks, _, err = c.Nodes.GetNodeDisksList(name)
+	for clientName, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		disks, _, err = c.client.Nodes.GetNodeDisksList(name)
 		if err == nil {
 			break
+		} else {
+			banClient(clientName, c)
 		}
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if disks == nil {
+		return nil, fmt.Errorf("request to get node disks was not successful. It's possible all clients are banned")
 	}
 
 	// Update per-node cache since we have it
@@ -178,14 +233,25 @@ func GetNodeCertificatesInfo(name string) (*proxmox.GetNodeCertificatesInfoRespo
 
 	// Make request if not found in cache
 	var err error
-	for _, c := range clients {
-		certs, _, err = c.Nodes.GetNodeCertificatesInfo(name)
+	for clientName, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		certs, _, err = c.client.Nodes.GetNodeCertificatesInfo(name)
 		if err == nil {
 			break
+		} else {
+			banClient(clientName, c)
 		}
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if certs == nil {
+		return nil, fmt.Errorf("request to get node certificates was not successful. It's possible all clients are banned")
 	}
 
 	// Update per-node cache since we have it
@@ -209,14 +275,25 @@ func GetNodeStorage(name string) (*proxmox.GetNodeStorageResponse, error) {
 
 	// Make request if not found in cache
 	var err error
-	for _, c := range clients {
-		store, _, err = c.Nodes.GetNodeStorage(name)
+	for clientName, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		store, _, err = c.client.Nodes.GetNodeStorage(name)
 		if err == nil {
 			break
+		} else {
+			banClient(clientName, c)
 		}
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if store == nil {
+		return nil, fmt.Errorf("request to get node storage was not successful. It's possible all clients are banned")
 	}
 
 	// Update per-node cache since we have it
