@@ -1,9 +1,11 @@
 package prometheus
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/starttoaster/go-proxmox"
 	"github.com/starttoaster/proxmox-exporter/internal/logger"
 	wrappedProxmox "github.com/starttoaster/proxmox-exporter/internal/proxmox"
 )
@@ -176,6 +178,16 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
+	// Retrieve cluster resources -- only does this if a cluster name was detected, because it uses a cluster API endpoint
+	var clusterResources *proxmox.GetClusterResourcesResponse
+	if wrappedProxmox.ClusterName != "" {
+		var err error
+		clusterResources, err = wrappedProxmox.GetClusterResources()
+		if err != nil {
+			logger.Logger.Debug(fmt.Sprintf("ignoring error requesting cluster resources, this is probably not a clustered PVE node: %s", err.Error()))
+		}
+	}
+
 	// Cluster level metric variables (added to in each iteration of the loop below)
 	clusterCPUs := 0
 	clusterCPUsAlloc := 0
@@ -189,7 +201,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	// Collect node metrics from each of the nodes
 	for _, node := range nodes.Data {
 		wg.Add(1)
-		go c.collectNode(ch, node, resultChan, &wg)
+		go c.collectNode(ch, clusterResources, node, resultChan, &wg)
 	}
 
 	// Close the result channel after all goroutines finish
