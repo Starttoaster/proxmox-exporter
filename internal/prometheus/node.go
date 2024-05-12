@@ -19,7 +19,7 @@ type collectNodeResponse struct {
 	clusterMemAlloc  int
 }
 
-func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNodesData, resultChan chan<- collectNodeResponse, wg *sync.WaitGroup) {
+func (c *Collector) collectNode(ch chan<- prometheus.Metric, clusterResources *proxmox.GetClusterResourcesResponse, node proxmox.GetNodesData, resultChan chan<- collectNodeResponse, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer logger.Logger.Debug("finished requests for node data", "node", node.Node)
 	var resp collectNodeResponse
@@ -38,7 +38,7 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, node proxmox.GetNod
 	if err != nil {
 		logger.Logger.Error("failed making request to get node VMs", "node", node.Node, "error", err.Error())
 	} else {
-		vmMetrics = c.collectVirtualMachineMetrics(ch, node, vms)
+		vmMetrics = c.collectVirtualMachineMetrics(ch, clusterResources, node, vms)
 	}
 
 	// Get lxc data on this node

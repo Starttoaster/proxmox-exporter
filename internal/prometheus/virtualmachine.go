@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"github.com/starttoaster/proxmox-exporter/internal/logger"
 	"strconv"
 	"strings"
 
@@ -16,9 +17,33 @@ type collectVirtualMachineMetricsResponse struct {
 }
 
 // collectLxcMetrics adds metrics to the registry that are per-VM and returns VM aggregate data for higher level metrics
-func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, node proxmox.GetNodesData, vms *proxmox.GetNodeQemuResponse) *collectVirtualMachineMetricsResponse {
+func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, clusterResources *proxmox.GetClusterResourcesResponse, node proxmox.GetNodesData, vms *proxmox.GetNodeQemuResponse) *collectVirtualMachineMetricsResponse {
 	var res collectVirtualMachineMetricsResponse
 	for _, vm := range vms.Data {
+		// Checks if cluster resources were provided. If they were, this will check if a VM is a template.
+		var vmIsTemplate bool
+		if clusterResources != nil {
+			for _, res := range clusterResources.Data {
+				var name string
+				if res.Name != nil {
+					name = *res.Name
+				}
+				var template int
+				if res.Template != nil {
+					template = *res.Template
+				}
+				if vm.Name == name && template == 1 {
+					vmIsTemplate = true
+				}
+			}
+		}
+
+		// Don't collect VM metrics on templates
+		if vmIsTemplate {
+			logger.Logger.Debug("excluding VM from collecting metrics because it is a template.", "name", vm.Name)
+			continue
+		}
+
 		// Add vm up metric
 		status := 0.0
 		if strings.EqualFold(vm.Status, "running") {
