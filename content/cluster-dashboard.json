@@ -557,7 +557,7 @@
             "uid": "${Datasource}"
           },
           "editorMode": "code",
-          "expr": "count(proxmox_guest_up{cluster=~\"$cluster\",type=\"qemu\"} == 0)",
+          "expr": "clamp_min(sum(proxmox_guest_up{cluster=~\"$cluster\",type=\"qemu\"} == 0), 0)",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
