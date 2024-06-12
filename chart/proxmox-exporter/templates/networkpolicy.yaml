@@ -1,0 +1,35 @@
+{{- if .Values.networkPolicy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "proxmox-exporter.fullname" . }}
+  labels:
+    {{- include "proxmox-exporter.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/instance
+        operator: In
+        values:
+          - {{ .Release.Name }}
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - {{ include "proxmox-exporter.name" . }}
+  policyTypes:
+    {{- with .Values.networkPolicy.policyTypes }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{if has "Ingress" .Values.networkPolicy.policyTypes }}
+  ingress:
+    {{- with .Values.networkPolicy.ingressRules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+  {{if has "Egress" .Values.networkPolicy.policyTypes }}
+  egress:
+    {{- with .Values.networkPolicy.egressRules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
