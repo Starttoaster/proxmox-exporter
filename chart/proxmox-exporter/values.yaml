@@ -59,6 +59,28 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+networkPolicy:
+  enabled: false
+  policyTypes: []
+  #    - Egress
+  #    - Ingress
+  egressRules: []
+  #    - to:
+  #        - namespaceSelector:
+  #            matchLabels:
+  #              name: chia-blockchain
+  #      ports:
+  #        - protocol: TCP
+  #          port: 8555
+  ingressRules: []
+#    - from:
+#        - namespaceSelector:
+#            matchLabels:
+#              name: chia-blockchain
+#      ports:
+#        - protocol: TCP
+#          port: 8555
+
 podAnnotations: {}
 
 podSecurityContext: {}
