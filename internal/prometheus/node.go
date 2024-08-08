@@ -87,10 +87,10 @@ func (c *Collector) collectNode(ch chan<- prometheus.Metric, clusterResources *p
 	if err != nil {
 		logger.Logger.Error("failed making request to get node status", "node", node.Node, "error", err.Error())
 	} else {
-		resp.clusterCPUs = nodeStatus.Data.CPUInfo.Cpus
+		resp.clusterCPUs = nodeStatus.Data.CPUInfo.CPUs
 		resp.clusterMem = nodeStatus.Data.Memory.Total
 		c.collectNodeVersionMetric(ch, node, nodeStatus.Data)
-		ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeStatus.Data.CPUInfo.Cpus), node.Node)
+		ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(nodeStatus.Data.CPUInfo.CPUs), node.Node)
 		ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(nodeStatus.Data.Memory.Total), node.Node)
 	}
 

@@ -2,7 +2,6 @@ package prometheus
 
 import (
 	"github.com/starttoaster/proxmox-exporter/internal/logger"
-	"strconv"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -49,10 +48,10 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, cl
 		if strings.EqualFold(vm.Status, "running") {
 			status = 1.0
 		}
-		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, node.Node, "qemu", vm.Name, strconv.Itoa(vm.VMID))
+		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, node.Node, "qemu", vm.Name, string(vm.VMID))
 
 		// Add to VM aggregate metrics
-		res.cpusAllocated += vm.Cpus
+		res.cpusAllocated += vm.CPUs
 		res.memAllocated += vm.MaxMem
 	}
 	return &res
