@@ -1,8 +1,9 @@
 package prometheus
 
 import (
-	"github.com/starttoaster/proxmox-exporter/internal/logger"
 	"strings"
+
+	"github.com/starttoaster/proxmox-exporter/internal/logger"
 
 	"github.com/prometheus/client_golang/prometheus"
 	proxmox "github.com/starttoaster/go-proxmox"
@@ -23,15 +24,15 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, cl
 		var vmIsTemplate bool
 		if clusterResources != nil {
 			for _, res := range clusterResources.Data {
-				var name string
-				if res.Name != nil {
-					name = *res.Name
+				var id proxmox.IntOrString
+				if res.VMID != nil {
+					id = *res.VMID
 				}
 				var template int
 				if res.Template != nil {
 					template = *res.Template
 				}
-				if vm.Name == name && template == 1 {
+				if vm.VMID == id && template == 1 {
 					vmIsTemplate = true
 				}
 			}
@@ -39,7 +40,7 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, cl
 
 		// Don't collect VM metrics on templates
 		if vmIsTemplate {
-			logger.Logger.Debug("excluding VM from collecting metrics because it is a template.", "name", vm.Name)
+			logger.Logger.Debug("excluding VM from collecting metrics because it is a template.", "name", vm.Name, "ID", vm.VMID)
 			continue
 		}
 
