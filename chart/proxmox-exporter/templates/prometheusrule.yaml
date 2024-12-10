@@ -9,6 +9,10 @@ spec:
   groups:
     - name: ProxmoxNodes
       rules:
+        {{- with .Values.prometheusRule.additionalRules }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.prometheusRule.enableBuiltinRules }}
         - alert: ProxmoxNodeDown
           annotations:
             summary: Proxmox node {{ printf "{{ $labels.node }}" }} is down
@@ -141,4 +145,5 @@ spec:
           for: 5m
           labels:
             severity: critical
+        {{- end }}
 {{- end }}

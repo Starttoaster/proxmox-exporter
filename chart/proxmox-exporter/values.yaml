@@ -50,6 +50,21 @@ serviceMonitor:
 prometheusRule:
   enabled: false
 
+  # Disable this to use your own rules provided in additionalRules
+  enableBuiltinRules: true
+
+  # A list of additional rules to provide to the PrometheusRule CR
+  # additionalRules:
+  #   - alert: ProxmoxRuleName
+  #     annotations:
+  #       summary: Proxmox node {{ printf "{{ $labels.node }}" }} is down
+  #       description: Check the alerting Proxmox host
+  #     expr: |
+  #       proxmox_metric_name != 0
+  #     for: 1m
+  #     labels:
+  #       severity: critical
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
