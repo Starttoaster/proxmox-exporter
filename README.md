@@ -50,6 +50,7 @@ docker run --name proxmox-exporter \
 -e PROXMOX_EXPORTER_PROXMOX_TOKEN='redacted-token' \
 -e PROXMOX_EXPORTER_PROXMOX_TOKEN_ID='redacted-token-id' \
 -e PROXMOX_EXPORTER_SERVER_PORT='8080' \
+-e PROXMOX_EXPORTER_SERVER_ADDR='0.0.0.0' \
 ghcr.io/starttoaster/proxmox-exporter:latest
 ```
 
@@ -139,6 +140,7 @@ PROXMOX_EXPORTER_PROXMOX_ENDPOINTS="https://x:8006/,https://y:8006/,https://z:80
 PROXMOX_EXPORTER_PROXMOX_TOKEN="redacted-token"
 PROXMOX_EXPORTER_PROXMOX_TOKEN_ID="redacted-token-id"
 PROXMOX_EXPORTER_SERVER_PORT=8080
+PROXMOX_EXPORTER_SERVER_ADDR=0.0.0.0
 ```
 
 ## Grafana

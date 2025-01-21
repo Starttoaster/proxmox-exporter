@@ -33,7 +33,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Create http server
-		m, err := http.NewServer(uint16(viper.GetUint("server-port")))
+		m, err := http.NewServer(string(viper.GetString("server-addr")), uint16(viper.GetUint("server-port")))
 		if err != nil {
 			log.Logger.Error(err.Error())
 			os.Exit(1)
@@ -61,6 +61,7 @@ func init() {
 	viper.AutomaticEnv()
 
 	rootCmd.PersistentFlags().String("log-level", "info", "The log-level for the application, can be one of info, warn, error, debug.")
+	rootCmd.PersistentFlags().String("server-addr", "0.0.0.0", "The address on which the exporter listens")
 	rootCmd.PersistentFlags().Uint16("server-port", 8080, "The port the metrics server binds to.")
 	rootCmd.PersistentFlags().String("proxmox-endpoints", "", "The Proxmox API endpoint, you can pass in multiple endpoints separated by commas (ex: https://localhost:8006/)")
 	rootCmd.PersistentFlags().String("proxmox-token-id", "", "Proxmox API token ID")
@@ -68,6 +69,12 @@ func init() {
 	rootCmd.PersistentFlags().Bool("proxmox-api-insecure", false, "Whether or not this client should accept insecure connections to Proxmox (default: false)")
 
 	err := viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
+	if err != nil {
+		log.Logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	err = viper.BindPFlag("server-addr", rootCmd.PersistentFlags().Lookup("server-addr"))
 	if err != nil {
 		log.Logger.Error(err.Error())
 		os.Exit(1)

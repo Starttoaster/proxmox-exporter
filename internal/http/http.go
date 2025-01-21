@@ -15,12 +15,14 @@ import (
 
 // Server is the config for the http server
 type Server struct {
+	addr string
 	port uint16
 }
 
 // NewServer returns a new instance of the http server
-func NewServer(port uint16) (*Server, error) {
+func NewServer(addr string, port uint16) (*Server, error) {
 	server := &Server{
+		addr: addr,
 		port: port,
 	}
 
@@ -29,7 +31,7 @@ func NewServer(port uint16) (*Server, error) {
 
 // StartServer starts the metrics server
 func (s *Server) StartServer() error {
-	log.Logger.Info("Starting server", "port", s.port)
+	log.Logger.Info("Starting server", "addr", s.addr, "port", s.port)
 
 	// Create new router with healthcheck handler
 	r := mux.NewRouter()
@@ -44,7 +46,7 @@ func (s *Server) StartServer() error {
 
 	srv := &http.Server{
 		Handler: r,
-		Addr:    fmt.Sprintf(":%d", s.port),
+		Addr:    fmt.Sprintf("%s:%d", s.addr, s.port),
 	}
 
 	return srv.ListenAndServe()
