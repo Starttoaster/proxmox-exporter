@@ -33,7 +33,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		// Create http server
-		m, err := http.NewServer(string(viper.GetString("server-addr")), uint16(viper.GetUint("server-port")))
+		m, err := http.NewServer(viper.GetString("server-addr"), uint16(viper.GetUint("server-port")))
 		if err != nil {
 			log.Logger.Error(err.Error())
 			os.Exit(1)
