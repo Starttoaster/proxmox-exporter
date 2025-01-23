@@ -18,9 +18,6 @@ config:
   # Set to 'debug' for more logs
   log_level: 'info'
 
-  # If you change this, change the service.port value too
-  port: '8080'
-
   # Set to 'true' if the API server's TLS can not be verified
   api_insecure: 'false'
 
@@ -31,6 +28,12 @@ config:
   # A Proxmox API token and token-ID. Needs to have at least the PVEAuditor role
   token: ''
   tokenID: ''
+
+  # optional: Set this to the address you want the server to bind to (0.0.0.0 by default)
+  addr: '0.0.0.0'
+  # optional: Set to the port you want the server to listen on. 
+  # If you change this, change the service.port value too
+  port: '8080'
 
 serviceMonitor:
   enabled: false

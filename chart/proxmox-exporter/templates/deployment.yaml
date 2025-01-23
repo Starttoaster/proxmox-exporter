@@ -56,6 +56,8 @@ spec:
               value: '{{ .Values.config.token }}'
             - name: PROXMOX_EXPORTER_PROXMOX_TOKEN_ID
               value: '{{ .Values.config.tokenID }}'
+            - name: PROXMOX_EXPORTER_SERVER_ADDR
+              value: '{{ .Values.config.addr }}'
             - name: PROXMOX_EXPORTER_SERVER_PORT
               value: '{{ .Values.config.port }}'
           resources:
