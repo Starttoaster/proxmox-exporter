@@ -1,0 +1,44 @@
+name: Release Binaries
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux]
+        arch: [386, amd64, arm64, arm]
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.22'
+
+      - name: Build the binary
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          GOOS=${{ matrix.os }}
+          GOARCH=${{ matrix.arch }}
+          go build -o proxmox_exporter-${VERSION}.${GOOS}-${GOARCH}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxmox_exporter-${{ github.ref_name }}.${{ matrix.os }}-${{ matrix.arch }}
+          path: proxmox_exporter-${{ github.ref_name }}.${{ matrix.os }}-${{ matrix.arch }}
+
+      - name: Publish Release
+        uses: skx/github-action-publish-binaries@release-2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: 'proxmox_exporter-*'
