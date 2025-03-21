@@ -1,0 +1,52 @@
+name: Release Binaries
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [linux]
+        arch: [386, amd64, arm64, arm]
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.24'
+
+      - name: Set release version variable
+        run: |
+          export RELEASE_TAG=$(jq -r '.release.tag_name' "$GITHUB_EVENT_PATH")
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+
+      - name: Build the binary
+        run: |
+          GOOS=${{ matrix.os }}
+          GOARCH=${{ matrix.arch }}
+          go build -o proxmox_exporter-${RELEASE_TAG}.${GOOS}-${GOARCH}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxmox_exporter-${{ env.RELEASE_TAG }}.${{ matrix.os }}-${{ matrix.arch }}
+          path: proxmox_exporter-${{ env.RELEASE_TAG }}.${{ matrix.os }}-${{ matrix.arch }}
+
+      - name: Upload release binary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload \
+              ${RELEASE_TAG} \
+              proxmox_exporter-${RELEASE_TAG}.${{ matrix.os }}-${{ matrix.arch }}
