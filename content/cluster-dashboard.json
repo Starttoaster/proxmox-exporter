@@ -565,7 +565,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "count(proxmox_guest_up{cluster=~\"$cluster\",type=\"qemu\"} == 0)",
+          "expr": "clamp_min(sum(proxmox_guest_up{cluster=~\"$cluster\",type=\"qemu\"} == 0), 0)",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
