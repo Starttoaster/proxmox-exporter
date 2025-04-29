@@ -114,7 +114,7 @@ func (c *Collector) collectDiskMetrics(ch chan<- prometheus.Metric, node proxmox
 	for _, disk := range disks.Data {
 		// Add disk health metric
 		status := 0.0
-		if strings.EqualFold(disk.Health, "PASSED") {
+		if strings.EqualFold(disk.Health, "PASSED") || strings.EqualFold(disk.Health, "OK") {
 			status = 1.0
 		}
 		ch <- prometheus.MustNewConstMetric(c.diskSmartHealth, prometheus.GaugeValue, status, node.Node, disk.DevPath)

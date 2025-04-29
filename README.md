@@ -207,7 +207,7 @@ proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp3",subject="/CN=P
 proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp3",subject="/CN=cmp3.gentoo-yo.ts.net"} 76
 proxmox_node_days_until_cert_expiration{cluster="prd",node="cmp3",subject="/OU=PVE Cluster Node/O=Proxmox Virtual Environment/CN=cmp3.local"} 702
 
-# HELP proxmox_node_disk_smart_status Disk SMART health status. (0=FAIL/Unknown,1=PASSED)
+# HELP proxmox_node_disk_smart_status Disk SMART health status. (0=FAIL/Unknown,1=PASSED/OK)
 # TYPE proxmox_node_disk_smart_status gauge
 proxmox_node_disk_smart_status{cluster="prd",devpath="/dev/nvme0n1",node="cmp1"} 1
 proxmox_node_disk_smart_status{cluster="prd",devpath="/dev/nvme0n1",node="cmp2"} 1
