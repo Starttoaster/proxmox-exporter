@@ -23,17 +23,28 @@ config:
 
   # Set to your actual API server URL(s). Can be one, or multiple separated by commas
   # Ex: https://x:8006/,https://y:8006/,https://z:8006/
-  endpoints: ''
+  # Ends up in PROXMOX_EXPORTER_PROXMOX_ENDPOINTS
+  # Can also be set via a Secret (see below)
+  # endpoints: ''
 
   # A Proxmox API token and token-ID. Needs to have at least the PVEAuditor role
-  token: ''
-  tokenID: ''
+  # Ends up in PROXMOX_EXPORTER_PROXMOX_TOKEN and PROXMOX_EXPORTER_PROXMOX_TOKEN_ID
+  # Can also be set via a Secret (see below)
+  # token: ''
+  # tokenID: ''
 
   # optional: Set this to the address you want the server to bind to (0.0.0.0 by default)
-  addr: '0.0.0.0'
-  # optional: Set to the port you want the server to listen on. 
+  # addr: '0.0.0.0'
+
+  # optional: Set to the port you want the server to listen on (8080 by default)
   # If you change this, change the service.port value too
-  port: '8080'
+  # port: '8080'
+
+  # optional: Name of a Secret containing additional environment variables
+  # All key-value pairs from the Secret will be available as environment variables
+  # Useful for setting PROXMOX_EXPORTER_PROXMOX_ENDPOINTS, PROXMOX_EXPORTER_PROXMOX_TOKEN and PROXMOX_EXPORTER_PROXMOX_TOKEN_ID
+  # secretRef:
+  #   name: ''
 
 serviceMonitor:
   enabled: false
@@ -55,6 +66,14 @@ prometheusRule:
 
   # Disable this to use your own rules provided in additionalRules
   enableBuiltinRules: true
+
+  # optional: Override individual thresholds for builtin rules
+  # threshold_ProxmoxUnsharedStorageNearlyFull: 90
+  # threshold_ProxmoxUnsharedStorageFilling: 80
+  # threshold_ProxmoxSharedStorageNearlyFull: 90
+  # threshold_ProxmoxSharedStorageFilling: 80
+  # threshold_ProxmoxCPUAllocationHigh: 90
+  # threshold_ProxmoxMemoryAllocationHigh: 90
 
   # A list of additional rules to provide to the PrometheusRule CR
   # additionalRules:
