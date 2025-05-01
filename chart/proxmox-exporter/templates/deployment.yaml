@@ -35,7 +35,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: metrics
-              containerPort: {{ .Values.config.port }}
+              containerPort: {{ .Values.config.port | default 8080 }}
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -50,16 +50,27 @@ spec:
               value: '{{ .Values.config.log_level }}'
             - name: PROXMOX_EXPORTER_PROXMOX_API_INSECURE
               value: '{{ .Values.config.api_insecure }}'
+            {{- if .Values.config.endpoints }}
             - name: PROXMOX_EXPORTER_PROXMOX_ENDPOINTS
               value: '{{ .Values.config.endpoints }}'
+            {{- end }}
+            {{- if .Values.config.token }}
             - name: PROXMOX_EXPORTER_PROXMOX_TOKEN
               value: '{{ .Values.config.token }}'
+            {{- end }}
+            {{- if .Values.config.tokenID }}
             - name: PROXMOX_EXPORTER_PROXMOX_TOKEN_ID
               value: '{{ .Values.config.tokenID }}'
+            {{- end }}
             - name: PROXMOX_EXPORTER_SERVER_ADDR
-              value: '{{ .Values.config.addr }}'
+              value: '{{ .Values.config.addr | default "0.0.0.0" }}'
             - name: PROXMOX_EXPORTER_SERVER_PORT
-              value: '{{ .Values.config.port }}'
+              value: '{{ .Values.config.port | default 8080 }}'
+          {{- if and .Values.config.secretRef .Values.config.secretRef.name }}
+          envFrom:
+            - secretRef:
+                {{- toYaml .Values.config.secretRef | nindent 16 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
