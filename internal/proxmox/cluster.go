@@ -45,7 +45,7 @@ func GetClusterStatus() (*proxmox.GetClusterStatusResponse, error) {
 	}
 
 	// Update cache
-	cash.Set("GetClusterStatus", cluster, cache.NoExpiration)
+	cash.Set("GetClusterStatus", cluster, cache.DefaultExpiration)
 
 	return cluster, nil
 }
@@ -87,7 +87,7 @@ func GetClusterResources() (*proxmox.GetClusterResourcesResponse, error) {
 	}
 
 	// Update cache
-	cash.Set("GetClusterResources", resources, cache.NoExpiration)
+	cash.Set("GetClusterResources", resources, cache.DefaultExpiration)
 
 	return resources, nil
 }
