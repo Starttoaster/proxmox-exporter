@@ -49,7 +49,7 @@ func (c *Collector) collectVirtualMachineMetrics(ch chan<- prometheus.Metric, cl
 		if strings.EqualFold(vm.Status, "running") {
 			status = 1.0
 		}
-		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, node.Node, "qemu", vm.Name, string(vm.VMID))
+		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, node.Node, "qemu", vm.Name, string(vm.VMID), vm.Tags)
 
 		// Add to VM aggregate metrics
 		res.cpusAllocated += vm.CPUs

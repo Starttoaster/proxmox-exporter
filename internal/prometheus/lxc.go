@@ -23,7 +23,7 @@ func (c *Collector) collectLxcMetrics(ch chan<- prometheus.Metric, node proxmox.
 		if strings.EqualFold(lxc.Status, "running") {
 			status = 1.0
 		}
-		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, node.Node, lxc.Type, lxc.Name, string(lxc.VMID))
+		ch <- prometheus.MustNewConstMetric(c.guestUp, prometheus.GaugeValue, status, node.Node, lxc.Type, lxc.Name, string(lxc.VMID), lxc.Tags)
 
 		// Add to LXC aggregate metrics
 		res.cpusAllocated += lxc.CPUs
