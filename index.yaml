@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   proxmox-exporter:
   - apiVersion: v2
+    appVersion: v0.2.8
+    created: "2025-08-17T04:15:46.491576352Z"
+    description: A Helm chart for Kubernetes
+    digest: cbdaa8b929f88a423a792b00b474e16735c8c6d9d5816d5d5107d64c3754de0c
+    name: proxmox-exporter
+    type: application
+    urls:
+    - https://github.com/Starttoaster/proxmox-exporter/releases/download/proxmox-exporter-0.2.9/proxmox-exporter-0.2.9.tgz
+    version: 0.2.9
+  - apiVersion: v2
     appVersion: v0.2.7
     created: "2025-05-12T04:06:06.723777792Z"
     description: A Helm chart for Kubernetes
@@ -201,4 +211,4 @@ entries:
     urls:
     - https://github.com/Starttoaster/proxmox-exporter/releases/download/proxmox-exporter-0.1.0/proxmox-exporter-0.1.0.tgz
     version: 0.1.0
-generated: "2025-05-12T04:06:06.723936198Z"
+generated: "2025-08-17T04:15:46.491742733Z"
