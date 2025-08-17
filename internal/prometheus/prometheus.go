@@ -59,7 +59,7 @@ func NewCollector() *Collector {
 		),
 		guestUp: prometheus.NewDesc(fqAddPrefix("guest_up"),
 			"Shows whether VMs and LXCs in a proxmox cluster are up. (0=down,1=up)",
-			[]string{"node", "type", "name", "vmid"},
+			[]string{"node", "type", "name", "vmid", "tags"},
 			constLabels,
 		),
 		nodeVersion: prometheus.NewDesc(fqAddPrefix("node_version"),
