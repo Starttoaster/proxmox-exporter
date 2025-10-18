@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/starttoaster/proxmox-exporter)](https://goreportcard.com/report/github.com/starttoaster/proxmox-exporter)
 
-A Prometheus exporter for individual PVE hosts or clusters. This is tested againsts PVE 8.x systems. Earlier Proxmox versions will be EOL soon, but in future major updates I'll try to keep the exporter metrics backwards compatible.
+A Prometheus exporter for PVE clusters and individual hosts. This runs on PVE 8.x and newer systems. All changes to the API are intended to be backwards compatible to any version of PVE that has not reached its [end of life date](https://forum.proxmox.com/threads/proxmox-ve-support-lifecycle.35755/).
 
 - [About](#about)
 - [Usage](#usage)
@@ -27,7 +27,7 @@ The number of nodes in your cluster shouldn't significantly slow down this expor
 
 When the Proxmox API returns an error response, if multiple API endpoints were given to this exporter's configuration, the request will be retried against one of them randomly. This provides some slack for Proxmox clusters that are in the middle of some temporary maintenance downtime on a node.
 
-We avoid exporting metrics which are redundant to metrics that may be collected by [node_exporter.](https://github.com/prometheus/node_exporter) Ideally, node_exporter should be ran in tandem with this, on your Proxmox nodes as well as in all of your guests.
+We avoid exporting metrics which are redundant to metrics that may be collected by [node_exporter.](https://github.com/prometheus/node_exporter) Ideally, node_exporter should be ran in tandem with this, on your Proxmox nodes as well as in all of your guests. Additionally, if you run Ceph on top of Proxmox, this exporter is meant to compliment (not replace) the metrics Ceph exports itself using the [Prometheus module](https://docs.ceph.com/en/squid/mgr/prometheus/).
 
 If you have a feature request, suggestion, or want to see another metric, open up an Issue or a Pull Request and we can discuss it!
 
