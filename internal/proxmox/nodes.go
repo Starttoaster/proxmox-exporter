@@ -301,3 +301,93 @@ func GetNodeStorage(name string) (*proxmox.GetNodeStorageResponse, error) {
 
 	return store, nil
 }
+
+// GetQemuSnapshots returns the snapshots for a VM
+func GetQemuSnapshots(nodeName string, vmID int) (*proxmox.GetQemuSnapshotsResponse, error) {
+	// Only using VM ID for the cache key because a VM/LXC can be migrated between cluster nodes in some storage configurations (like Ceph)
+	cacheKey := fmt.Sprintf("GetQemuSnapshots_%d", vmID)
+
+	// Chech cache
+	var out *proxmox.GetQemuSnapshotsResponse
+	if x, found := cash.Get(cacheKey); found {
+		var ok bool
+		out, ok = x.(*proxmox.GetQemuSnapshotsResponse)
+		if ok {
+			log.Logger.Debug("proxmox request was found in cache for GetQemuSnapshots", "node", nodeName, "vm_id", vmID)
+			return out, nil
+		}
+	}
+
+	// Make request if not found in cache
+	var err error
+	for clientName, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		out, _, err = c.client.Nodes.GetQemuSnapshots(nodeName, vmID)
+		if err == nil {
+			break
+		} else {
+			banClient(clientName, c)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, fmt.Errorf("request to get qemu snapshots was not successful. It's possible all clients are banned")
+	}
+
+	// Update per-node cache since we have it
+	cash.Set(cacheKey, out, cache.DefaultExpiration)
+
+	return out, nil
+}
+
+// GetLxcSnapshots returns the snapshots for a LXC
+func GetLxcSnapshots(nodeName string, vmID int) (*proxmox.GetLxcSnapshotsResponse, error) {
+	// Only using VM ID for the cache key because a VM/LXC can be migrated between cluster nodes in some storage configurations (like Ceph)
+	cacheKey := fmt.Sprintf("GetLxcSnapshots_%d", vmID)
+
+	// Chech cache
+	var out *proxmox.GetLxcSnapshotsResponse
+	if x, found := cash.Get(cacheKey); found {
+		var ok bool
+		out, ok = x.(*proxmox.GetLxcSnapshotsResponse)
+		if ok {
+			log.Logger.Debug("proxmox request was found in cache for GetLxcSnapshots", "node", nodeName, "lxc_id", vmID)
+			return out, nil
+		}
+	}
+
+	// Make request if not found in cache
+	var err error
+	for clientName, c := range clients {
+		// Check if client was banned, skip if is
+		if c.banned {
+			continue
+		}
+
+		out, _, err = c.client.Nodes.GetLxcSnapshots(nodeName, vmID)
+		if err == nil {
+			break
+		} else {
+			banClient(clientName, c)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, fmt.Errorf("request to get LXC snapshots was not successful. It's possible all clients are banned")
+	}
+
+	// Update per-node cache since we have it
+	cash.Set(cacheKey, out, cache.DefaultExpiration)
+
+	return out, nil
+}

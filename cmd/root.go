@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	log "github.com/starttoaster/proxmox-exporter/internal/logger"
+	"github.com/starttoaster/proxmox-exporter/internal/prometheus"
 
 	"github.com/starttoaster/proxmox-exporter/internal/http"
 	"github.com/starttoaster/proxmox-exporter/internal/proxmox"
@@ -39,6 +40,16 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		// Settings for metrics exporter
+		if viper.GetBool("enable-snapshot-metrics") {
+			log.Logger.Info("Guest snapshot metrics enabled ✓")
+		} else {
+			log.Logger.Info("Guest snapshot metrics disabled ˟")
+		}
+		prometheus.Init(prometheus.Config{
+			EnableSnapshotMetrics: viper.GetBool("enable-snapshot-metrics"),
+		})
+
 		// Start http server
 		err = m.StartServer()
 		if err != nil {
@@ -67,6 +78,7 @@ func init() {
 	rootCmd.PersistentFlags().String("proxmox-token-id", "", "Proxmox API token ID")
 	rootCmd.PersistentFlags().String("proxmox-token", "", "Proxmox API token")
 	rootCmd.PersistentFlags().Bool("proxmox-api-insecure", false, "Whether or not this client should accept insecure connections to Proxmox (default: false)")
+	rootCmd.PersistentFlags().Bool("enable-snapshot-metrics", true, "Enable to export Qemu/LXC snapshot metrics")
 
 	err := viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
 	if err != nil {
@@ -105,6 +117,12 @@ func init() {
 	}
 
 	err = viper.BindPFlag("proxmox-api-insecure", rootCmd.PersistentFlags().Lookup("proxmox-api-insecure"))
+	if err != nil {
+		log.Logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	err = viper.BindPFlag("enable-snapshot-metrics", rootCmd.PersistentFlags().Lookup("enable-snapshot-metrics"))
 	if err != nil {
 		log.Logger.Error(err.Error())
 		os.Exit(1)
