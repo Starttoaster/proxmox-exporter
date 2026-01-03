@@ -10,6 +10,18 @@ import (
 	wrappedProxmox "github.com/starttoaster/proxmox-exporter/internal/proxmox"
 )
 
+var cfg Config
+
+// Config is the configuration to pass to the init function
+type Config struct {
+	EnableSnapshotMetrics bool
+}
+
+// Init is a helper to configure the metrics collector
+func Init(c Config) {
+	cfg = c
+}
+
 // Collector contains all prometheus metric Descs
 type Collector struct {
 	// Statuses
@@ -33,6 +45,9 @@ type Collector struct {
 	storageTotal *prometheus.Desc
 	storageUsed  *prometheus.Desc
 
+	// Snapshots
+	guestSnapshotsCount *prometheus.Desc
+
 	// Disk
 	diskSmartHealth *prometheus.Desc
 
@@ -43,14 +58,14 @@ type Collector struct {
 // NewCollector constructor function for Collector
 func NewCollector() *Collector {
 	// Initialize constant labels for timeseries this exporter makes
-	var constLabels prometheus.Labels = make(prometheus.Labels)
+	var constLabels = make(prometheus.Labels)
 
 	// Add cluster label if the API package found a cluster name
 	if wrappedProxmox.ClusterName != "" {
 		constLabels["cluster"] = wrappedProxmox.ClusterName
 	}
 
-	return &Collector{
+	collector := Collector{
 		// Status metrics
 		nodeUp: prometheus.NewDesc(fqAddPrefix("node_up"),
 			"Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)",
@@ -138,6 +153,17 @@ func NewCollector() *Collector {
 			constLabels,
 		),
 	}
+
+	// Enable snapshot metrics
+	if cfg.EnableSnapshotMetrics {
+		collector.guestSnapshotsCount = prometheus.NewDesc(fqAddPrefix("guest_snapshots"),
+			"Count of snapshots taken for a given guest.",
+			[]string{"node", "type", "name", "vmid", "tags"},
+			constLabels,
+		)
+	}
+
+	return &collector
 }
 
 // Describe contains all the prometheus descriptors for this metric collector
@@ -161,6 +187,11 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	// Storage metrics
 	ch <- c.storageTotal
 	ch <- c.storageUsed
+
+	// Snapshot metrics
+	if cfg.EnableSnapshotMetrics {
+		ch <- c.guestSnapshotsCount
+	}
 
 	// Disk metrics
 	ch <- c.diskSmartHealth

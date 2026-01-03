@@ -46,6 +46,9 @@ config:
   # secretRef:
   #   name: ''
 
+  # Enable/Disable certain metrics
+  enableGuestSnapshotMetrics: true
+
 serviceMonitor:
   enabled: false
   ## The label to use to retrieve the job name from.

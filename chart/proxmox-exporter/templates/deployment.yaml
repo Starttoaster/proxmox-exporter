@@ -66,6 +66,8 @@ spec:
               value: '{{ .Values.config.addr | default "0.0.0.0" }}'
             - name: PROXMOX_EXPORTER_SERVER_PORT
               value: '{{ .Values.config.port | default 8080 }}'
+            - name: PROXMOX_EXPORTER_ENABLE_SNAPSHOT_METRICS
+              value: '{{ .Values.config.enableGuestSnapshotMetrics }}'
           {{- if and .Values.config.secretRef .Values.config.secretRef.name }}
           envFrom:
             - secretRef:
