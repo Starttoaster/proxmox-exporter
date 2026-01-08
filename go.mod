@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
-	github.com/starttoaster/go-proxmox v0.1.0
+	github.com/starttoaster/go-proxmox v0.1.1
 )
 
 require (
