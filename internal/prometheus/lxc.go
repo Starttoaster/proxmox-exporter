@@ -3,6 +3,7 @@ package prometheus
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	proxmox "github.com/starttoaster/go-proxmox"
@@ -60,4 +61,14 @@ func (c *Collector) collectLxcSnapshotMetrics(ch chan<- prometheus.Metric, node 
 		snapshotCount = 0 // This should never be the case that the snapshot count is a negative number, but just in case
 	}
 	ch <- prometheus.MustNewConstMetric(c.guestSnapshotsCount, prometheus.GaugeValue, float64(snapshotCount), node.Node, "lxc", lxc.Name, string(lxc.VMID), lxc.Tags)
+
+	// Get snap age metrics
+	for _, snapshot := range snapshots.Data {
+		if snapshot.SnapTime != nil {
+			snapUnixTime := int64(*snapshot.SnapTime)
+			snapTime := time.Unix(snapUnixTime, 0)
+			secondsAgo := time.Since(snapTime).Seconds()
+			ch <- prometheus.MustNewConstMetric(c.guestSnapshotAgeSeconds, prometheus.GaugeValue, float64(secondsAgo), node.Node, "lxc", lxc.Name, string(lxc.VMID), lxc.Tags, snapshot.Name)
+		}
+	}
 }
