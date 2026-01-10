@@ -46,7 +46,8 @@ type Collector struct {
 	storageUsed  *prometheus.Desc
 
 	// Snapshots
-	guestSnapshotsCount *prometheus.Desc
+	guestSnapshotsCount     *prometheus.Desc
+	guestSnapshotAgeSeconds *prometheus.Desc
 
 	// Disk
 	diskSmartHealth *prometheus.Desc
@@ -161,6 +162,11 @@ func NewCollector() *Collector {
 			[]string{"node", "type", "name", "vmid", "tags"},
 			constLabels,
 		)
+		collector.guestSnapshotAgeSeconds = prometheus.NewDesc(fqAddPrefix("guest_snapshot_age_seconds"),
+			"Number of seconds since a snapshot was taken for a given guest.",
+			[]string{"node", "type", "name", "vmid", "tags", "snapshot"},
+			constLabels,
+		)
 	}
 
 	return &collector
@@ -191,6 +197,7 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 	// Snapshot metrics
 	if cfg.EnableSnapshotMetrics {
 		ch <- c.guestSnapshotsCount
+		ch <- c.guestSnapshotAgeSeconds
 	}
 
 	// Disk metrics
