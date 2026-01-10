@@ -3,6 +3,7 @@ package prometheus
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/starttoaster/proxmox-exporter/internal/logger"
 
@@ -85,4 +86,14 @@ func (c *Collector) collectQemuSnapshotMetrics(ch chan<- prometheus.Metric, node
 		snapshotCount = 0 // This should never be the case that the snapshot count is a negative number, but just in case
 	}
 	ch <- prometheus.MustNewConstMetric(c.guestSnapshotsCount, prometheus.GaugeValue, float64(snapshotCount), node.Node, "qemu", vm.Name, string(vm.VMID), vm.Tags)
+
+	// Get snap age metrics
+	for _, snapshot := range snapshots.Data {
+		if snapshot.SnapTime != nil {
+			snapUnixTime := int64(*snapshot.SnapTime)
+			snapTime := time.Unix(snapUnixTime, 0)
+			secondsAgo := time.Since(snapTime).Seconds()
+			ch <- prometheus.MustNewConstMetric(c.guestSnapshotAgeSeconds, prometheus.GaugeValue, float64(secondsAgo), node.Node, "qemu", vm.Name, string(vm.VMID), vm.Tags, snapshot.Name)
+		}
+	}
 }
