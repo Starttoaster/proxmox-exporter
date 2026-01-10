@@ -21,7 +21,7 @@ This exporter accepts one or multiple Proxmox manager API endpoints to disperse 
 
 It also does API response caching. We cache the responses for up to 29 seconds, which should produce fresh metrics if scraped in 30 second intervals, or respond with cache at least half of the time if scraped in 15 second intervals. If you run highly available Prometheus instances that each scrape this exporter, it should only need to make the same set of requests to Proxmox's API one time per 30 second scrape interval.
 
-When cache is _not_ used, this exporter makes `2 + (6 * <number of PVE nodes>)` API requests against your cluster to display its metrics. One to list nodes in the PVE cluster, 6 per-node to reach all of the node specific endpoints this exporter gets its data from, and one additional request to the cluster resources endpoint if running in a cluster. The number of API endpoints it uses may increase as additional types of metrics are added. One additional request is made on this exporter's start up, to retrieve the name of a Proxmox cluster for your timeseries labels, if it's a clustered PVE setup, but the exporter has no need to reload this endpoint over time.
+When cache is _not_ used, this exporter makes `2 + (6 * <number of PVE nodes>)` API requests against your cluster to display its metrics. One to list nodes in the PVE cluster, 6 per-node to reach all of the node specific endpoints this exporter gets its data from, and one additional request to the cluster resources endpoint if running in a cluster. The number of API endpoints it uses may increase as additional types of metrics are added. One additional request is made on this exporter's start up, to retrieve the name of a Proxmox cluster for your timeseries labels, if it's a clustered PVE setup, but the exporter has no need to reload this endpoint over time. One request per guest is also made to gather snapshot metrics, but these are optional and can be disabled if you don't utilize PVE snapshots.
 
 The number of nodes in your cluster shouldn't significantly slow down this exporter's response time, because each set of requests for a node are made concurrently.
 
@@ -269,6 +269,16 @@ proxmox_node_up{cluster="prd",node="cmp3"} 1
 proxmox_node_version{cluster="prd",node="cmp1",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 proxmox_node_version{cluster="prd",node="cmp2",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
 proxmox_node_version{cluster="prd",node="cmp3",version="pve-manager/8.1.4/ec5affc9e41f1d79"} 1
+
+# HELP proxmox_guest_snapshot_age_seconds Number of seconds since a snapshot was taken for a given guest.
+# TYPE proxmox_guest_snapshot_age_seconds gauge
+proxmox_guest_snapshot_age_seconds{cluster="prd",name="CT101",node="cmp1",snapshot="test4",tags="",type="lxc",vmid="101"} 170802.231996
+proxmox_guest_snapshot_age_seconds{cluster="prd",name="test",node="cmp1",snapshot="test2",tags="",type="qemu",vmid="114"} 170044.168103
+
+# HELP proxmox_guest_snapshots Count of snapshots taken for a given guest.
+# TYPE proxmox_guest_snapshots gauge
+proxmox_guest_snapshots{cluster="prd",name="CT101",node="cmp1",tags="",type="lxc",vmid="101"} 4
+proxmox_guest_snapshots{cluster="prd",name="test",node="cmp1",tags="",type="qemu",vmid="114"} 2
 ```
 
 ## Make an API Token
