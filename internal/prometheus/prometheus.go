@@ -24,6 +24,9 @@ func Init(c Config) {
 
 // Collector contains all prometheus metric Descs
 type Collector struct {
+	// Exporter
+	clientCount *prometheus.Desc
+
 	// Statuses
 	nodeUp      *prometheus.Desc
 	guestUp     *prometheus.Desc
@@ -67,6 +70,13 @@ func NewCollector() *Collector {
 	}
 
 	collector := Collector{
+		// Exporter metrics
+		clientCount: prometheus.NewDesc(fqAddPrefix("exporter_client_count"),
+			"Counts number of Proxmox clients (banned and unbanned)",
+			[]string{"status"},
+			constLabels,
+		),
+
 		// Status metrics
 		nodeUp: prometheus.NewDesc(fqAddPrefix("node_up"),
 			"Shows whether host nodes in a proxmox cluster are up. (0=down,1=up)",
@@ -174,6 +184,9 @@ func NewCollector() *Collector {
 
 // Describe contains all the prometheus descriptors for this metric collector
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
+	// Exporter metrics
+	ch <- c.clientCount
+
 	// Status metrics
 	ch <- c.nodeUp
 	ch <- c.guestUp
@@ -209,6 +222,10 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect instructs the prometheus client how to collect the metrics for each descriptor
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
+	// Get basic exporter metrics
+	ch <- prometheus.MustNewConstMetric(c.clientCount, prometheus.GaugeValue, float64(wrappedProxmox.GetBannedClientCount()), "banned")
+	ch <- prometheus.MustNewConstMetric(c.clientCount, prometheus.GaugeValue, float64(wrappedProxmox.GetUnbannedClientCount()), "unbanned")
+
 	// Retrieve node statuses for the cluster
 	nodes, err := wrappedProxmox.GetNodes()
 	if err != nil {
