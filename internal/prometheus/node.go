@@ -51,6 +51,9 @@ func (c *Collector) collectDiskMetrics(ch chan<- prometheus.Metric, nodeName str
 		if strings.EqualFold(disk.Health, "PASSED") || strings.EqualFold(disk.Health, "OK") {
 			status = 1.0
 		}
+		if strings.EqualFold(disk.Health, "UNKNOWN") {
+			status = -1.0
+		}
 		ch <- prometheus.MustNewConstMetric(c.diskSmartHealth, prometheus.GaugeValue, status, nodeName, disk.DevPath)
 	}
 }

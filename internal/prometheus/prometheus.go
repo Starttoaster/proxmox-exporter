@@ -152,7 +152,7 @@ func NewCollector() *Collector {
 
 		// Disk metrics
 		diskSmartHealth: prometheus.NewDesc(fqAddPrefix("node_disk_smart_status"),
-			"Disk SMART health status. (0=FAIL/Unknown,1=PASSED/OK)",
+			"Disk SMART health status. (-1=UNKNOWN,0=FAIL,1=PASSED/OK)",
 			[]string{"node", "devpath"},
 			constLabels,
 		),
