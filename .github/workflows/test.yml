@@ -14,7 +14,7 @@ jobs:
       - name: Test
         run: go test ./...
 
-  lint:
+  build:
     runs-on: ubuntu-latest
     container: golang:1
     env:
@@ -24,6 +24,14 @@ jobs:
 
       - name: Build
         run: go build -o /dev/null ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    container: golang:1
+    env:
+      GOFLAGS: "-buildvcs=false"
+    steps:
+      - uses: actions/checkout@v6
 
       - name: Check gofmt changes
         run: |
