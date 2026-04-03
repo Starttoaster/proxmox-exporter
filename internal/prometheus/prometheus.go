@@ -1,7 +1,7 @@
 package prometheus
 
 import (
-	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -222,60 +222,87 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 
 // Collect instructs the prometheus client how to collect the metrics for each descriptor
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
-	// Get basic exporter metrics
 	ch <- prometheus.MustNewConstMetric(c.clientCount, prometheus.GaugeValue, float64(wrappedProxmox.GetBannedClientCount()), "banned")
 	ch <- prometheus.MustNewConstMetric(c.clientCount, prometheus.GaugeValue, float64(wrappedProxmox.GetUnbannedClientCount()), "unbanned")
 
-	// Retrieve node statuses for the cluster
-	nodes, err := wrappedProxmox.GetNodes()
+	// Single API call replaces GetNodes + per-node GetNodeQemu/GetNodeLxc/GetNodeStorage
+	clusterResources, err := wrappedProxmox.GetClusterResources()
 	if err != nil {
 		logger.Logger.Error(err.Error())
 		return
 	}
 
-	// Retrieve cluster resources -- only does this if a cluster name was detected, because it uses a cluster API endpoint
-	var clusterResources *proxmox.GetClusterResourcesResponse
-	if wrappedProxmox.ClusterName != "" {
-		var err error
-		clusterResources, err = wrappedProxmox.GetClusterResources()
-		if err != nil {
-			logger.Logger.Debug(fmt.Sprintf("ignoring error requesting cluster resources, this is probably not a clustered PVE node: %s", err.Error()))
+	// Categorize resources by type in a single pass
+	var nodeResources, qemuResources, lxcResources, storageResources []proxmox.GetClusterResourcesData
+	for _, r := range clusterResources.Data {
+		switch r.Type {
+		case "node":
+			nodeResources = append(nodeResources, r)
+		case "qemu":
+			qemuResources = append(qemuResources, r)
+		case "lxc":
+			lxcResources = append(lxcResources, r)
+		case "storage":
+			storageResources = append(storageResources, r)
 		}
 	}
 
-	// Cluster level metric variables (added to in each iteration of the loop below)
+	// Process node metrics from cluster resources
 	clusterCPUs := 0
-	clusterCPUsAlloc := 0
 	clusterMem := 0
+	var onlineNodes []string
+	for _, node := range nodeResources {
+		c.collectNodeUpMetric(ch, node)
+		if strings.EqualFold(node.Status, "online") {
+			onlineNodes = append(onlineNodes, node.Node)
+		}
+		if node.MaxCPU != nil {
+			ch <- prometheus.MustNewConstMetric(c.nodeCPUsTotal, prometheus.GaugeValue, float64(*node.MaxCPU), node.Node)
+			clusterCPUs += *node.MaxCPU
+		}
+		if node.MaxMem != nil {
+			ch <- prometheus.MustNewConstMetric(c.nodeMemTotal, prometheus.GaugeValue, float64(*node.MaxMem), node.Node)
+			clusterMem += *node.MaxMem
+		}
+	}
+
+	// Process guest metrics from cluster resources
+	vmMetrics := c.collectVirtualMachineMetrics(ch, qemuResources)
+	lxcMetrics := c.collectLxcMetrics(ch, lxcResources)
+
+	// Combine VM + LXC allocations per node
+	clusterCPUsAlloc := 0
 	clusterMemAlloc := 0
-
-	// Make waitgroup and results channel for cluster level metrics
-	var wg sync.WaitGroup
-	resultChan := make(chan collectNodeResponse, len(nodes.Data))
-
-	// Collect node metrics from each of the nodes
-	for _, node := range nodes.Data {
-		wg.Add(1)
-		go c.collectNode(ch, clusterResources, node, resultChan, &wg)
+	allocNodes := make(map[string]bool)
+	for node := range vmMetrics.cpusPerNode {
+		allocNodes[node] = true
+	}
+	for node := range lxcMetrics.cpusPerNode {
+		allocNodes[node] = true
+	}
+	for node := range allocNodes {
+		cpus := vmMetrics.cpusPerNode[node] + lxcMetrics.cpusPerNode[node]
+		mem := vmMetrics.memPerNode[node] + lxcMetrics.memPerNode[node]
+		ch <- prometheus.MustNewConstMetric(c.nodeCPUsAlloc, prometheus.GaugeValue, float64(cpus), node)
+		ch <- prometheus.MustNewConstMetric(c.nodeMemAlloc, prometheus.GaugeValue, float64(mem), node)
+		clusterCPUsAlloc += cpus
+		clusterMemAlloc += mem
 	}
 
-	// Close the result channel after all goroutines finish
-	go func() {
-		wg.Wait()
-		close(resultChan)
-	}()
+	// Process storage metrics from cluster resources
+	c.collectStorageMetrics(ch, storageResources)
 
-	// Collect results from the channel
-	for result := range resultChan {
-		clusterCPUs += result.clusterCPUs
-		clusterCPUsAlloc += result.clusterCPUsAlloc
-		clusterMem += result.clusterMem
-		clusterMemAlloc += result.clusterMemAlloc
-	}
-
-	// Collect cluster metrics
+	// Emit cluster-level metrics
 	ch <- prometheus.MustNewConstMetric(c.clusterCPUsTotal, prometheus.GaugeValue, float64(clusterCPUs))
 	ch <- prometheus.MustNewConstMetric(c.clusterCPUsAlloc, prometheus.GaugeValue, float64(clusterCPUsAlloc))
 	ch <- prometheus.MustNewConstMetric(c.clusterMemTotal, prometheus.GaugeValue, float64(clusterMem))
 	ch <- prometheus.MustNewConstMetric(c.clusterMemAlloc, prometheus.GaugeValue, float64(clusterMemAlloc))
+
+	// Per-node API calls for data not available in cluster resources (disk SMART, certs, PVE version)
+	var wg sync.WaitGroup
+	for _, nodeName := range onlineNodes {
+		wg.Add(1)
+		go c.collectNodeSpecificMetrics(ch, nodeName, &wg)
+	}
+	wg.Wait()
 }
