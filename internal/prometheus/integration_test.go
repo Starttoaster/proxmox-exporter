@@ -78,7 +78,7 @@ func intCertHandler() http.HandlerFunc {
 		thirtyDays := time.Now().Add(30 * 24 * time.Hour).Unix()
 		oneYear := time.Now().Add(365 * 24 * time.Hour).Unix()
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{
+		_, _ = fmt.Fprintf(w, `{
 			"data": [
 				{"filename": "pveproxy-ssl.pem", "fingerprint": "AA:BB", "issuer": "CN=PVE", "notafter": %d, "notbefore": 1600000000, "pem": "test", "public-key-bits": 2048, "public-key-type": "rsa", "san": ["test"], "subject": "CN=pveproxy"},
 				{"filename": "pve-ssl.pem", "fingerprint": "CC:DD", "issuer": "CN=PVE CA", "notafter": %d, "notbefore": 1600000000, "pem": "test2", "public-key-bits": 4096, "public-key-type": "rsa", "san": ["test"], "subject": "CN=PVE CA"}
@@ -90,7 +90,7 @@ func intCertHandler() http.HandlerFunc {
 func intJSONHandler(body string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, body)
+		_, _ = fmt.Fprint(w, body)
 	}
 }
 
