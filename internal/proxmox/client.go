@@ -41,6 +41,7 @@ func Init(endpoints []string, tokenID, token string, tlsVerify bool) error {
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: tlsVerify,
+				MinVersion:         tls.VersionTLS13,
 			},
 		},
 	}
