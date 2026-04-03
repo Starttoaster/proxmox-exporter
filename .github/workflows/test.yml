@@ -1,4 +1,4 @@
-name: Test/Lint/Fmt/Vet
+name: Lint + Test
 on:
   pull_request:
 
@@ -9,13 +9,21 @@ jobs:
     env:
       GOFLAGS: "-buildvcs=false"
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Build
-        run: go build -o /dev/null ./...
+      - uses: actions/checkout@v6
 
       - name: Test
         run: go test ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    container: golang:1
+    env:
+      GOFLAGS: "-buildvcs=false"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build
+        run: go build -o /dev/null ./...
 
       - name: Check gofmt changes
         run: |
