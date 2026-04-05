@@ -151,6 +151,8 @@ Simply copy the JSON, and in your grafana instance, in the Dashboards tab, selec
 
 ![Cluster dashboard](content/cluster-dashboard.png)
 
+![Cluster dashboard 2](content/cluster-dashboard-2.png)
+
 ## Alerting
 
 The Helm chart in this repository comes with some Prometheus rules for PVE servers. More alerts are being added to it over time. Find that in the `chart/proxmox-exporter/templates` directory.
