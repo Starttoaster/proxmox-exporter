@@ -5,6 +5,9 @@ metadata:
   name: {{ include "proxmox-exporter.fullname" . }}
   labels:
     {{- include "proxmox-exporter.labels" . | nindent 4 }}
+    {{- with .Values.prometheusRule.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   groups:
     - name: ProxmoxNodes
@@ -22,15 +25,9 @@ spec:
           for: 1m
           labels:
             severity: critical
-        - alert: ProxmoxNodeTargetLost
-          annotations:
-            summary: Proxmox node up metric absent for {{ printf "{{ $labels.node }}" }}
-            description: Something wrong with the exporter, the Proxmox API server(s) it is configured to make requests to, or the server the exporter is running on
-          expr: |
-            absent_over_time(proxmox_node_up[1h])
-          for: 1m
-          labels:
-            severity: critical
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
         - alert: ProxmoxGuestDown
           annotations:
@@ -38,18 +35,12 @@ spec:
             description: Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is down
           expr: |
             proxmox_guest_up == 0
-          for: 1m
+          for: 5m
           labels:
-            severity: critical
-        - alert: ProxmoxGuestTargetLost
-          annotations:
-            summary: Proxmox guest up metric absent for {{ printf "{{ $labels.name }}" }}
-            description:  Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} may be down
-          expr: |
-            absent_over_time(proxmox_guest_up[1h])
-          for: 1m
-          labels:
-            severity: critical
+            severity: warning
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
         - alert: ProxmoxDiskUnhealthy
           annotations:
@@ -60,15 +51,9 @@ spec:
           for: 1m
           labels:
             severity: critical
-        - alert: ProxmoxDiskTargetLost
-          annotations:
-            summary: Lost metrics for Proxmox disk {{ printf "{{ $labels.devpath }}" }}
-            description:  The disk {{ printf "{{ $labels.devpath }}" }} in node {{ printf "{{ $labels.node }}" }} is not showing up in metrics from Proxmox anymore
-          expr: |
-            absent_over_time(proxmox_node_disk_smart_status[1h])
-          for: 1m
-          labels:
-            severity: critical
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
         - alert: ProxmoxCertificateExpiring
           annotations:
@@ -79,6 +64,9 @@ spec:
           for: 5m
           labels:
             severity: critical
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
         - alert: ProxmoxCertificateExpiringWarning
           annotations:
             summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring soon
@@ -88,44 +76,59 @@ spec:
           for: 5m
           labels:
             severity: warning
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
         - alert: ProxmoxUnsharedStorageNearlyFull
           annotations:
             summary: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} nearly full
-            description: Volume of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+            description: Volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is {{ printf "{{ $value }}" }}% full
           expr: |
-            100 * (sum by (storage,node) (proxmox_node_storage_used_bytes{shared="false"}) / sum by (storage,node) (proxmox_node_storage_total_bytes)) > {{ .Values.prometheusRule.threshold_ProxmoxUnsharedStorageNearlyFull | default 90 }}
+            100 * (sum by (storage,node,type) (proxmox_node_storage_used_bytes{shared="false"}) / sum by (storage,node,type) (proxmox_node_storage_total_bytes{shared="false"})) > {{ .Values.prometheusRule.threshold_ProxmoxUnsharedStorageNearlyFull | default 90 }}
           for: 5m
           labels:
             severity: critical
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
         - alert: ProxmoxUnsharedStorageFilling
           annotations:
-            summary: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} nearly full
-            description: Volume of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+            summary: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} filling up
+            description: Volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is {{ printf "{{ $value }}" }}% full
           expr: |
-            100 * (sum by (storage,node) (proxmox_node_storage_used_bytes{shared="false"}) / sum by (storage,node) (proxmox_node_storage_total_bytes)) > {{ .Values.prometheusRule.threshold_ProxmoxUnsharedStorageFilling | default 80 }}
+            100 * (sum by (storage,node,type) (proxmox_node_storage_used_bytes{shared="false"}) / sum by (storage,node,type) (proxmox_node_storage_total_bytes{shared="false"})) > {{ .Values.prometheusRule.threshold_ProxmoxUnsharedStorageFilling | default 80 }}
           for: 5m
           labels:
             severity: warning
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
         - alert: ProxmoxSharedStorageNearlyFull
           annotations:
             summary: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} nearly full
-            description: Volume of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+            description: Shared volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
           expr: |
-            100 * (sum by (storage) (proxmox_node_storage_used_bytes{shared="true"}) / sum by (storage) (proxmox_node_storage_total_bytes)) > {{ .Values.prometheusRule.threshold_ProxmoxSharedStorageNearlyFull | default 90 }}
+            100 * (sum by (storage,type) (proxmox_node_storage_used_bytes{shared="true"}) / sum by (storage,type) (proxmox_node_storage_total_bytes{shared="true"})) > {{ .Values.prometheusRule.threshold_ProxmoxSharedStorageNearlyFull | default 90 }}
           for: 5m
           labels:
             severity: critical
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
         - alert: ProxmoxSharedStorageFilling
           annotations:
-            summary: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} nearly full
-            description: Volume of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+            summary: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} filling up
+            description: Shared volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
           expr: |
-            100 * (sum by (storage) (proxmox_node_storage_used_bytes{shared="true"}) / sum by (storage) (proxmox_node_storage_total_bytes)) > {{ .Values.prometheusRule.threshold_ProxmoxSharedStorageFilling | default 80 }}
+            100 * (sum by (storage,type) (proxmox_node_storage_used_bytes{shared="true"}) / sum by (storage,type) (proxmox_node_storage_total_bytes{shared="true"})) > {{ .Values.prometheusRule.threshold_ProxmoxSharedStorageFilling | default 80 }}
           for: 5m
           labels:
             severity: warning
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
         - alert: ProxmoxCPUAllocationHigh
           annotations:
@@ -135,7 +138,10 @@ spec:
             100 * (proxmox_node_cpus_allocated / proxmox_node_cpus_total) > {{ .Values.prometheusRule.threshold_ProxmoxCPUAllocationHigh | default 90 }}
           for: 5m
           labels:
-            severity: critical
+            severity: warning
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
         - alert: ProxmoxMemoryAllocationHigh
           annotations:
             summary: Proxmox node {{ printf "{{ $labels.node }}" }} has {{ printf "{{ $value }}" }}% of its memory allocated to guests
@@ -144,6 +150,9 @@ spec:
             100 * (proxmox_node_memory_allocated_bytes / proxmox_node_memory_total_bytes) > {{ .Values.prometheusRule.threshold_ProxmoxMemoryAllocationHigh | default 90 }}
           for: 5m
           labels:
-            severity: critical
+            severity: warning
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
         {{- end }}
 {{- end }}

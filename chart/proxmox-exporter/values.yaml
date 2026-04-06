@@ -67,6 +67,15 @@ serviceMonitor:
 prometheusRule:
   enabled: false
 
+  # Additional labels to add to the PrometheusRule resource metadata
+  additionalLabels: {}
+
+  # Labels to add to every built-in alert rule (useful for alert routing in Alertmanager)
+  # ruleLabels:
+  #   team: infra
+  #   channel: "#proxmox-alerts"
+  ruleLabels: {}
+
   # Disable this to use your own rules provided in additionalRules
   enableBuiltinRules: true
 
