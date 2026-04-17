@@ -69,9 +69,3 @@ jobs:
       - name: Push chart to GHCR
         if: steps.check.outputs.exists == 'false'
         run: helm push "proxmox-exporter-${{ steps.chart.outputs.version }}.tgz" "oci://ghcr.io/${{ steps.chart.outputs.owner }}/charts"
-
-      - name: Install ORAS
-        uses: oras-project/setup-oras@v1
-
-      - name: Tag chart as latest
-        run: oras tag "ghcr.io/${{ steps.chart.outputs.owner }}/charts/proxmox-exporter:${{ steps.chart.outputs.version }}" latest
