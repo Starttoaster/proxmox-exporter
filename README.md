@@ -95,15 +95,25 @@ prometheusRule:
   enabled: false
 ```
 
-Install the chart:
+Install the chart from the HTTP repo:
 
 ```bash
 helm upgrade --install --create-namespace \
---repo "https://starttoaster.github.io/proxmox-exporter" 
+--repo "https://starttoaster.github.io/proxmox-exporter" \
 -n proxmox-exporter \
 --values ./values.yaml \
 proxmox-exporter \
 proxmox-exporter
+```
+
+Or install from the OCI registry:
+
+```bash
+helm upgrade --install --create-namespace \
+-n proxmox-exporter \
+--values ./values.yaml \
+proxmox-exporter \
+oci://ghcr.io/starttoaster/charts/proxmox-exporter
 ```
 
 ### Shell
