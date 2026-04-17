@@ -44,16 +44,18 @@ jobs:
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      - name: Extract chart version
+      - name: Extract chart metadata
         id: chart
         run: |
           version=$(grep '^version:' chart/proxmox-exporter/Chart.yaml | awk '{print $2}')
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "owner=$owner" >> "$GITHUB_OUTPUT"
 
       - name: Check if version already exists
         id: check
         run: |
-          if helm pull "oci://ghcr.io/${{ github.repository_owner }}/charts/proxmox-exporter" --version "${{ steps.chart.outputs.version }}" 2>/dev/null; then
+          if helm pull "oci://ghcr.io/${{ steps.chart.outputs.owner }}/charts/proxmox-exporter" --version "${{ steps.chart.outputs.version }}" 2>/dev/null; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "::notice::Chart version ${{ steps.chart.outputs.version }} already exists in OCI registry, skipping push"
           else
@@ -66,10 +68,10 @@ jobs:
 
       - name: Push chart to GHCR
         if: steps.check.outputs.exists == 'false'
-        run: helm push "proxmox-exporter-${{ steps.chart.outputs.version }}.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"
+        run: helm push "proxmox-exporter-${{ steps.chart.outputs.version }}.tgz" "oci://ghcr.io/${{ steps.chart.outputs.owner }}/charts"
 
       - name: Install ORAS
         uses: oras-project/setup-oras@v1
 
       - name: Tag chart as latest
-        run: oras tag "ghcr.io/${{ github.repository_owner }}/charts/proxmox-exporter:${{ steps.chart.outputs.version }}" latest
+        run: oras tag "ghcr.io/${{ steps.chart.outputs.owner }}/charts/proxmox-exporter:${{ steps.chart.outputs.version }}" latest
