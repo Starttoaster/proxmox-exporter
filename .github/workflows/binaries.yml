@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux]
-        arch: [386, amd64, arm64, arm]
+        arch: [386, amd64, arm64, arm, riscv64]
     steps:
       - name: Check out the code
         uses: actions/checkout@v2
@@ -32,10 +32,7 @@ jobs:
           echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
 
       - name: Build the binary
-        run: |
-          GOOS=${{ matrix.os }}
-          GOARCH=${{ matrix.arch }}
-          go build -o proxmox_exporter-${RELEASE_TAG}.${GOOS}-${GOARCH}
+        run: GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o proxmox_exporter-${RELEASE_TAG}.${GOOS}-${GOARCH}
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
