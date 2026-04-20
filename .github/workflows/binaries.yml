@@ -1,49 +1,95 @@
-name: Release Binaries
+name: Build Binaries
 
 on:
   release:
     types:
       - published
+  pull_request:
 
 permissions:
-  id-token: write
-  contents: write
+  contents: read
+
+concurrency:
+  group: binaries-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
+    name: build (${{ matrix.os }}/${{ matrix.arch }}${{ matrix.goarm && format('v{0}', matrix.goarm) || '' }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [linux]
-        arch: [386, amd64, arm64, arm, riscv64]
+        include:
+          - { os: linux, arch: '386' }
+          - { os: linux, arch: amd64 }
+          - { os: linux, arch: arm64 }
+          - { os: linux, arch: arm, goarm: '7' }
+          - { os: linux, arch: riscv64 }
     steps:
       - name: Check out the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+          cache: true
 
-      - name: Set release version variable
+      - name: Resolve version
+        id: version
         run: |
-          export RELEASE_TAG=$(jq -r '.release.tag_name' "$GITHUB_EVENT_PATH")
-          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          if [ "${{ github.event_name }}" = "release" ]; then
+            version='${{ github.event.release.tag_name }}'
+          else
+            version="pr-${{ github.event.pull_request.number }}-${GITHUB_SHA::7}"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          suffix="${{ matrix.os }}-${{ matrix.arch }}"
+          if [ -n "${{ matrix.goarm }}" ]; then
+            suffix="${suffix}v${{ matrix.goarm }}"
+          fi
+          echo "suffix=${suffix}" >> "$GITHUB_OUTPUT"
+          echo "binary=proxmox_exporter-${version}.${suffix}" >> "$GITHUB_OUTPUT"
 
       - name: Build the binary
-        run: GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o proxmox_exporter-${RELEASE_TAG}.${GOOS}-${GOARCH}
+        env:
+          CGO_ENABLED: '0'
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          GOARM: ${{ matrix.goarm }}
+          BINARY: ${{ steps.version.outputs.binary }}
+        run: |
+          go build \
+            -trimpath \
+            -ldflags "-s -w" \
+            -o "${BINARY}" \
+            .
 
-      - name: Upload binary
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: proxmox_exporter-${{ env.RELEASE_TAG }}.${{ matrix.os }}-${{ matrix.arch }}
-          path: proxmox_exporter-${{ env.RELEASE_TAG }}.${{ matrix.os }}-${{ matrix.arch }}
+          name: ${{ steps.version.outputs.binary }}
+          path: ${{ steps.version.outputs.binary }}
+          if-no-files-found: error
+          retention-days: ${{ github.event_name == 'pull_request' && 7 || 90 }}
 
-      - name: Upload release binary
+  release:
+    name: Upload to GitHub release
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Upload binaries to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload \
-              ${RELEASE_TAG} \
-              proxmox_exporter-${RELEASE_TAG}.${{ matrix.os }}-${{ matrix.arch }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "${RELEASE_TAG}" dist/* --repo "${GITHUB_REPOSITORY}" --clobber
