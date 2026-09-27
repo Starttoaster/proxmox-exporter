@@ -1,4 +1,7 @@
 {{- if .Values.prometheusRule.enabled }}
+{{- $annotationKeys := .Values.prometheusRule.annotationKeys | default dict }}
+{{- $summaryKey := $annotationKeys.summary | default "summary" }}
+{{- $descriptionKey := $annotationKeys.description | default "description" }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -18,8 +21,8 @@ spec:
         {{- if .Values.prometheusRule.enableBuiltinRules }}
         - alert: ProxmoxNodeDown
           annotations:
-            summary: Proxmox node {{ printf "{{ $labels.node }}" }} is down
-            description: Check the alerting Proxmox host
+            {{ $summaryKey }}: Proxmox node {{ printf "{{ $labels.node }}" }} is down
+            {{ $descriptionKey }}: Check the alerting Proxmox host
           expr: |
             proxmox_node_up == 0
           for: 1m
@@ -31,8 +34,8 @@ spec:
 
         - alert: ProxmoxGuestDown
           annotations:
-            summary: Proxmox guest {{ printf "{{ $labels.name }}" }} is down
-            description: Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is down
+            {{ $summaryKey }}: Proxmox guest {{ printf "{{ $labels.name }}" }} is down
+            {{ $descriptionKey }}: Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is down
           expr: |
             proxmox_guest_up == 0
           for: 5m
@@ -44,8 +47,8 @@ spec:
 
         - alert: ProxmoxDiskUnhealthy
           annotations:
-            summary: Proxmox disk {{ printf "{{ $labels.devpath }}" }} is unhealthy
-            description: The disk {{ printf "{{ $labels.devpath }}" }} in node {{ printf "{{ $labels.node }}" }} is reporting unhealthy in SMART tests
+            {{ $summaryKey }}: Proxmox disk {{ printf "{{ $labels.devpath }}" }} is unhealthy
+            {{ $descriptionKey }}: The disk {{ printf "{{ $labels.devpath }}" }} in node {{ printf "{{ $labels.node }}" }} is reporting unhealthy in SMART tests
           expr: |
             proxmox_node_disk_smart_status == 0
           for: 1m
@@ -57,8 +60,8 @@ spec:
 
         - alert: ProxmoxCertificateExpiring
           annotations:
-            summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring in a week
-            description: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring in {{ printf "{{ $value }}" }} days
+            {{ $summaryKey }}: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring in a week
+            {{ $descriptionKey }}: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring in {{ printf "{{ $value }}" }} days
           expr: |
             proxmox_node_days_until_cert_expiration < {{ .Values.prometheusRule.threshold_ProxmoxCertificateExpiring | default 7 }}
           for: 5m
@@ -69,8 +72,8 @@ spec:
             {{- end }}
         - alert: ProxmoxCertificateExpiringWarning
           annotations:
-            summary: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring soon
-            description: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring in {{ printf "{{ $value }}" }} days
+            {{ $summaryKey }}: Proxmox certificate on node {{ printf "{{ $labels.node }}" }} is expiring soon
+            {{ $descriptionKey }}: The certificate with subject {{ printf "{{ $labels.subject }}" }} on that node is expiring in {{ printf "{{ $value }}" }} days
           expr: |
             proxmox_node_days_until_cert_expiration < {{ .Values.prometheusRule.threshold_ProxmoxCertificateExpiringWarning | default 14 }}
           for: 5m
@@ -82,8 +85,8 @@ spec:
 
         - alert: ProxmoxUnsharedStorageNearlyFull
           annotations:
-            summary: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} nearly full
-            description: Volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is {{ printf "{{ $value }}" }}% full
+            {{ $summaryKey }}: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} nearly full
+            {{ $descriptionKey }}: Volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is {{ printf "{{ $value }}" }}% full
           expr: |
             100 * (sum by (storage,node,type) (proxmox_node_storage_used_bytes{shared="false"}) / sum by (storage,node,type) (proxmox_node_storage_total_bytes{shared="false"})) > {{ .Values.prometheusRule.threshold_ProxmoxUnsharedStorageNearlyFull | default 90 }}
           for: 5m
@@ -94,8 +97,8 @@ spec:
             {{- end }}
         - alert: ProxmoxUnsharedStorageFilling
           annotations:
-            summary: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} filling up
-            description: Volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is {{ printf "{{ $value }}" }}% full
+            {{ $summaryKey }}: Proxmox storage volume {{ printf "{{ $labels.node }}" }}/{{ printf "{{ $labels.storage }}" }} filling up
+            {{ $descriptionKey }}: Volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is {{ printf "{{ $value }}" }}% full
           expr: |
             100 * (sum by (storage,node,type) (proxmox_node_storage_used_bytes{shared="false"}) / sum by (storage,node,type) (proxmox_node_storage_total_bytes{shared="false"})) > {{ .Values.prometheusRule.threshold_ProxmoxUnsharedStorageFilling | default 80 }}
           for: 5m
@@ -107,8 +110,8 @@ spec:
 
         - alert: ProxmoxSharedStorageNearlyFull
           annotations:
-            summary: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} nearly full
-            description: Shared volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+            {{ $summaryKey }}: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} nearly full
+            {{ $descriptionKey }}: Shared volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
           expr: |
             100 * (sum by (storage,type) (proxmox_node_storage_used_bytes{shared="true"}) / sum by (storage,type) (proxmox_node_storage_total_bytes{shared="true"})) > {{ .Values.prometheusRule.threshold_ProxmoxSharedStorageNearlyFull | default 90 }}
           for: 5m
@@ -119,8 +122,8 @@ spec:
             {{- end }}
         - alert: ProxmoxSharedStorageFilling
           annotations:
-            summary: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} filling up
-            description: Shared volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
+            {{ $summaryKey }}: Proxmox shared storage volume {{ printf "{{ $labels.storage }}" }} filling up
+            {{ $descriptionKey }}: Shared volume {{ printf "{{ $labels.storage }}" }} of type {{ printf "{{ $labels.type }}" }} is {{ printf "{{ $value }}" }}% full
           expr: |
             100 * (sum by (storage,type) (proxmox_node_storage_used_bytes{shared="true"}) / sum by (storage,type) (proxmox_node_storage_total_bytes{shared="true"})) > {{ .Values.prometheusRule.threshold_ProxmoxSharedStorageFilling | default 80 }}
           for: 5m
@@ -132,8 +135,8 @@ spec:
 
         - alert: ProxmoxCPUAllocationHigh
           annotations:
-            summary: Proxmox node {{ printf "{{ $labels.node }}" }} has {{ printf "{{ $value }}" }}% of its CPU allocated to guests
-            description: It is recommended to keep more of your node's CPU unallocated for use by PVE and other server applications your Proxmox node runs
+            {{ $summaryKey }}: Proxmox node {{ printf "{{ $labels.node }}" }} has {{ printf "{{ $value }}" }}% of its CPU allocated to guests
+            {{ $descriptionKey }}: It is recommended to keep more of your node's CPU unallocated for use by PVE and other server applications your Proxmox node runs
           expr: |
             100 * (proxmox_node_cpus_allocated / proxmox_node_cpus_total) > {{ .Values.prometheusRule.threshold_ProxmoxCPUAllocationHigh | default 90 }}
           for: 5m
@@ -144,8 +147,8 @@ spec:
             {{- end }}
         - alert: ProxmoxMemoryAllocationHigh
           annotations:
-            summary: Proxmox node {{ printf "{{ $labels.node }}" }} has {{ printf "{{ $value }}" }}% of its memory allocated to guests
-            description: It is recommended to keep more of your node's memory unallocated for use by PVE and other server applications your Proxmox node runs
+            {{ $summaryKey }}: Proxmox node {{ printf "{{ $labels.node }}" }} has {{ printf "{{ $value }}" }}% of its memory allocated to guests
+            {{ $descriptionKey }}: It is recommended to keep more of your node's memory unallocated for use by PVE and other server applications your Proxmox node runs
           expr: |
             100 * (proxmox_node_memory_allocated_bytes / proxmox_node_memory_total_bytes) > {{ .Values.prometheusRule.threshold_ProxmoxMemoryAllocationHigh | default 90 }}
           for: 5m

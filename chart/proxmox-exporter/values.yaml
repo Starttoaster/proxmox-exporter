@@ -76,6 +76,12 @@ prometheusRule:
   #   channel: "#proxmox-alerts"
   ruleLabels: {}
 
+  # Annotation key names used by the built-in alert rules
+  # (e.g. set summary: title and description: message to match your Alertmanager templates)
+  annotationKeys:
+    summary: summary
+    description: description
+
   # Disable this to use your own rules provided in additionalRules
   enableBuiltinRules: true
 
