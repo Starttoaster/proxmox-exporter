@@ -31,6 +31,30 @@ spec:
             {{- with .Values.prometheusRule.ruleLabels }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+        - alert: ProxmoxNodeMetricsLost
+          annotations:
+            {{ $summaryKey }}: Proxmox node {{ printf "{{ $labels.node }}" }} is missing from exporter metrics
+            {{ $descriptionKey }}: Node {{ printf "{{ $labels.node }}" }} was reported within the last hour but no longer is. The node may have been removed from the cluster, or the exporter may be failing to query the Proxmox API
+          expr: |
+            max_over_time(proxmox_node_up[1h]) unless proxmox_node_up
+          for: 5m
+          labels:
+            severity: critical
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        - alert: ProxmoxExporterMetricsAbsent
+          annotations:
+            {{ $summaryKey }}: No Proxmox node metrics are being collected
+            {{ $descriptionKey }}: proxmox_node_up has been absent for 10 minutes. Check the exporter pod, its connection to the Proxmox API, and the ServiceMonitor scraping it
+          expr: |
+            absent_over_time(proxmox_node_up[5m])
+          for: 5m
+          labels:
+            severity: critical
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
         - alert: ProxmoxGuestDown
           annotations:
@@ -38,6 +62,18 @@ spec:
             {{ $descriptionKey }}: Guest {{ printf "{{ $labels.name }}" }} of type {{ printf "{{ $labels.type }}" }} on node {{ printf "{{ $labels.node }}" }} is down
           expr: |
             proxmox_guest_up == 0
+          for: 5m
+          labels:
+            severity: warning
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        - alert: ProxmoxGuestMetricsLost
+          annotations:
+            {{ $summaryKey }}: Proxmox guest {{ printf "{{ $labels.name }}" }} is missing from exporter metrics
+            {{ $descriptionKey }}: Guest {{ printf "{{ $labels.name }}" }} ({{ printf "{{ $labels.type }}" }} {{ printf "{{ $labels.vmid }}" }}) was reported within the last hour but no longer is. This is expected for up to an hour after a guest is deleted
+          expr: |
+            max_over_time(proxmox_guest_up[1h]) unless ignoring(node, name, tags) proxmox_guest_up
           for: 5m
           labels:
             severity: warning
@@ -54,6 +90,18 @@ spec:
           for: 1m
           labels:
             severity: critical
+            {{- with .Values.prometheusRule.ruleLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        - alert: ProxmoxDiskMetricsLost
+          annotations:
+            {{ $summaryKey }}: Proxmox disk {{ printf "{{ $labels.devpath }}" }} is missing from exporter metrics
+            {{ $descriptionKey }}: The disk {{ printf "{{ $labels.devpath }}" }} in node {{ printf "{{ $labels.node }}" }} was reported within the last hour but no longer is. It may have failed, been removed, or been renamed after a reboot
+          expr: |
+            max_over_time(proxmox_node_disk_smart_status[1h]) unless proxmox_node_disk_smart_status
+          for: 5m
+          labels:
+            severity: warning
             {{- with .Values.prometheusRule.ruleLabels }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
