@@ -36,7 +36,8 @@ spec:
             {{ $summaryKey }}: Proxmox node {{ printf "{{ $labels.node }}" }} is missing from exporter metrics
             {{ $descriptionKey }}: Node {{ printf "{{ $labels.node }}" }} was reported within the last hour but no longer is. The node may have been removed from the cluster, or the exporter may be failing to query the Proxmox API
           expr: |
-            max_over_time(proxmox_node_up[1h]) unless proxmox_node_up
+            max by (cluster, node) (max_over_time(proxmox_node_up[1h]))
+              unless on (cluster, node) proxmox_node_up
           for: 5m
           labels:
             severity: critical
@@ -73,7 +74,8 @@ spec:
             {{ $summaryKey }}: Proxmox guest {{ printf "{{ $labels.name }}" }} is missing from exporter metrics
             {{ $descriptionKey }}: Guest {{ printf "{{ $labels.name }}" }} ({{ printf "{{ $labels.type }}" }} {{ printf "{{ $labels.vmid }}" }}) was reported within the last hour but no longer is. This is expected for up to an hour after a guest is deleted
           expr: |
-            max_over_time(proxmox_guest_up[1h]) unless ignoring(node, name, tags) proxmox_guest_up
+            max by (cluster, vmid, type, name) (max_over_time(proxmox_guest_up[1h]))
+              unless on (cluster, vmid) proxmox_guest_up
           for: 5m
           labels:
             severity: warning
@@ -98,7 +100,8 @@ spec:
             {{ $summaryKey }}: Proxmox disk {{ printf "{{ $labels.devpath }}" }} is missing from exporter metrics
             {{ $descriptionKey }}: The disk {{ printf "{{ $labels.devpath }}" }} in node {{ printf "{{ $labels.node }}" }} was reported within the last hour but no longer is. It may have failed, been removed, or been renamed after a reboot
           expr: |
-            max_over_time(proxmox_node_disk_smart_status[1h]) unless proxmox_node_disk_smart_status
+            max by (cluster, node, devpath) (max_over_time(proxmox_node_disk_smart_status[1h]))
+              unless on (cluster, node, devpath) proxmox_node_disk_smart_status
           for: 5m
           labels:
             severity: warning
